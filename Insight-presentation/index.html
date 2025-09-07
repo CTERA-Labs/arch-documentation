@@ -189,6 +189,14 @@
                 </tbody>
             </table>
         </div>
+        <div class="mt-8">
+            <button id="calculatorBtn" class="bg-transparent border-2 border-cyan-400 text-cyan-400 px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-0a192f transition-all duration-300 flex items-center gap-2 mx-auto">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                Calculate Architecture Costs
+            </button>
+        </div>
     </div>
     <!-- Slide 6: New Business Model Segue -->
     <div class="slide text-center">
@@ -243,6 +251,19 @@
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-80 items-center justify-center hidden z-50">
         <span id="closeModal" class="absolute top-4 right-6 text-white text-4xl font-bold cursor-pointer hover:text-cyan-400 transition-colors">&times;</span>
         <img id="modalImage" src="" alt="Enlarged Diagram" class="max-w-[90vw] max-h-[90vh] object-contain">
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="fixed inset-0 bg-black bg-opacity-80 items-center justify-center hidden z-50">
+        <div class="bg-0a192f border border-cyan-400 rounded-lg w-[95vw] h-[95vh] max-w-7xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-cyan-400">
+                <h3 class="text-xl font-bold text-cyan-400">Cloud Data Architecture Cost Calculator</h3>
+                <span id="closeCalculatorModal" class="text-white text-3xl font-bold cursor-pointer hover:text-cyan-400 transition-colors">&times;</span>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="calculatorFrame" src="../Insight-calculator/index.html" class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -318,7 +339,7 @@
         prevBtn.addEventListener('click', goToPrevSlide);
         
         document.addEventListener('keydown', (e) => {
-            if (modal.classList.contains('hidden')) { // only navigate if modal is not open
+            if (modal.classList.contains('hidden') && calculatorModal.classList.contains('hidden')) { // only navigate if modals are not open
                 if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                     goToNextSlide();
                 } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
@@ -328,7 +349,7 @@
         });
 
         document.addEventListener('wheel', (e) => {
-            if (isScrolling || !modal.classList.contains('hidden')) return;
+            if (isScrolling || !modal.classList.contains('hidden') || !calculatorModal.classList.contains('hidden')) return;
             isScrolling = true;
             if (e.deltaY > 0) { // Scrolling down
                 goToNextSlide();
@@ -350,6 +371,37 @@
         closeModal.addEventListener('click', hideModal);
         modal.addEventListener('click', (e) => { if (e.target === modal) { hideModal(); } });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) { hideModal(); } });
+
+        // Calculator Modal Logic
+        const calculatorModal = document.getElementById('calculatorModal');
+        const calculatorBtn = document.getElementById('calculatorBtn');
+        const closeCalculatorModal = document.getElementById('closeCalculatorModal');
+        const calculatorFrame = document.getElementById('calculatorFrame');
+
+        function showCalculatorModal() {
+            calculatorModal.classList.remove('hidden');
+            calculatorModal.classList.add('flex');
+            // Reset iframe src to ensure fresh load
+            calculatorFrame.src = calculatorFrame.src;
+        }
+
+        function hideCalculatorModal() {
+            calculatorModal.classList.add('hidden');
+            calculatorModal.classList.remove('flex');
+        }
+
+        calculatorBtn.addEventListener('click', showCalculatorModal);
+        closeCalculatorModal.addEventListener('click', hideCalculatorModal);
+        calculatorModal.addEventListener('click', (e) => { 
+            if (e.target === calculatorModal) { 
+                hideCalculatorModal(); 
+            } 
+        });
+        document.addEventListener('keydown', (e) => { 
+            if (e.key === 'Escape' && !calculatorModal.classList.contains('hidden')) { 
+                hideCalculatorModal(); 
+            } 
+        });
 
         // Fullscreen Logic
         const fullscreenBtn = document.getElementById('fullscreenBtn');
