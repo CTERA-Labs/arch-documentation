@@ -1,13 +1,35 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
   "rewrites": [
     {
-      "source": "/([^/]+)/",
-      "destination": "/$1/index.html"
+      "source": "/Insight-calculator",
+      "destination": "/Insight-calculator/index.html"
     },
     {
-      "source": "/([^/]+)",
-      "destination": "/$1/index.html"
+      "source": "/Insight-calculator/",
+      "destination": "/Insight-calculator/index.html"
+    },
+    {
+      "source": "/Insight-presentation",
+      "destination": "/Insight-presentation/index.html"
+    },
+    {
+      "source": "/Insight-presentation/",
+      "destination": "/Insight-presentation/index.html"
+    },
+    {
+      "source": "/portal-modernization-presentation",
+      "destination": "/portal-modernization-presentation/index.html"
+    },
+    {
+      "source": "/portal-modernization-presentation/",
+      "destination": "/portal-modernization-presentation/index.html"
     }
   ],
   "headers": [
