@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Enhanced Modernization Roadmap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2ff; /* Light indigo background */
+        }
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+        .slide-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .table-cell {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .code-block {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            border: 1px solid #374151;
+        }
+        .gemini-btn {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .gemini-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+        .gemini-btn svg {
+            transition: transform 0.3s ease;
+        }
+        .gemini-btn:hover svg {
+            transform: rotate(15deg);
+        }
+        #ai-modal, #settings-modal {
+            display: none;
+            z-index: 10000; /* Ensure modals are on top of fullscreen */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        /* Fullscreen Styles */
+        body.is-fullscreen #presentation-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            margin: 0;
+            z-index: 9999;
+        }
+         body.is-fullscreen #presentation {
+            height: 100%;
+            border-radius: 0;
+            border: none;
+         }
+         /* Print Styles */
+         @media print {
+            body {
+                background-color: #fff !important;
+            }
+            /* Hide all direct children of body except the presentation wrapper */
+            body > *:not(#presentation-wrapper) {
+                display: none;
+            }
+            #presentation-wrapper, #presentation, .flex-grow {
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background-color: #fff !important;
+            }
+            #presentation .bg-gray-800 { /* Hide controls */
+                display: none;
+            }
+            .slide {
+                display: block !important;
+                opacity: 1 !important;
+                page-break-after: always;
+                height: auto;
+                min-height: 95vh;
+                width: 100%;
+                overflow: visible;
+                border: 1px solid #eee;
+                border-radius: 0;
+            }
+            .slide:last-of-type {
+                page-break-after: auto;
+            }
+            .gemini-btn {
+                display: none;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+         }
+    </style>
+</head>
+<body class="bg-indigo-50 text-gray-800">
+
+    <div id="presentation-wrapper" class="w-full max-w-6xl mx-auto my-12">
+        <div id="presentation" class="w-full bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col h-[calc(45rem+56px)]">
+            <div class="flex-grow relative">
+                <!-- Slides will be injected here by JS -->
+            </div>
+            
+            <div class="bg-gray-800 text-white p-4 flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <span id="slide-counter" class="text-sm font-medium text-gray-400"></span>
+                    <button id="settings-btn" class="text-gray-400 hover:text-white transition-colors" title="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                    <button id="fullscreen-btn" class="text-gray-400 hover:text-white transition-colors" title="Toggle Fullscreen">
+                        <svg class="icon-enter-fs" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                        <svg class="icon-exit-fs" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+                    </button>
+                    <button id="print-btn" class="text-gray-400 hover:text-white transition-colors" title="Print Presentation">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    </button>
+                </div>
+                <div>
+                    <button id="prev-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg mr-2 transition-all duration-200 disabled:opacity-50">Previous</button>
+                    <button id="next-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="ai-modal-title" class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                    AI-Powered Insights
+                </h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="ai-modal-content" class="p-6 overflow-y-auto">
+                <!-- Loader or content goes here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Settings</h3>
+                <button id="close-settings-btn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="api-key-input" class="block text-sm font-medium text-gray-700">Google AI Studio API Key</label>
+                    <input type="password" id="api-key-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Enter your API key">
+                </div>
+                
+                <div class="pt-4 text-xs text-gray-600 border-t">
+                    <strong class="font-medium text-gray-700">How to get a free API key:</strong>
+                    <ol class="list-decimal list-inside mt-2 space-y-1">
+                        <li>Go to <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">Google AI Studio</a> and sign in.</li>
+                        <li>Find and click the <strong class="text-gray-800">"Get API key"</strong> button.</li>
+                        <li>Click <strong class="text-gray-800">"Create API key in new project"</strong>.</li>
+                        <li>Copy the generated key and paste it into the field above.</li>
+                    </ol>
+                </div>
+
+                <p class="text-xs text-gray-500">Your key is stored locally in your browser and is only used to communicate with the Google API.</p>
+                <button id="save-api-key-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Save Key</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slides = [
+            // Slide 1: Title
+            `
+            <div class="slide-content text-center bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+                <div class="relative">
+                    <h1 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Legacy Modernization Roadmap</h1>
+                    <p class="text-xl text-indigo-300 max-w-3xl">A Strategic, Phased Migration from Monolith to Cloud-Native Microservices</p>
+                    <p class="mt-6 text-sm font-semibold uppercase tracking-widest text-gray-400">Now with ✨ AI-Powered Features</p>
+                </div>
+            </div>
+            `,
+            // Slide 2: Executive Summary
+            `
+            <div class="slide-content text-left">
+                <h2 class="text-3xl font-bold mb-6 text-indigo-700">Strategic Modernization Blueprint</h2>
+                <h3 class="text-2xl font-semibold mb-4">Executive Summary</h3>
+                <div class="card w-full">
+                    <ul class="list-none space-y-4 text-lg">
+                        <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><b>Objective:</b> Transition a 13-year-old monolith to a scalable, cloud-native architecture.</span></li>
+                        <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><b>Strategy:</b> Incremental, phased migration to mitigate risk (no "big bang" rewrite).</span></li>
+                        <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><b>Core Principles:</b> Strangler Fig Pattern & Shift-Left Quality.</span></li>
+                        <li class="flex items-start"><svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><b>Outcomes:</b> Scalability, developer velocity, faster TTM, future-proof platform.</span></li>
+                    </ul>
+                </div>
+                <button class="gemini-btn" data-prompt="Based on the executive summary provided, draft a short, compelling paragraph for a non-technical business stakeholder (like a CFO) explaining the ROI of this project. Focus on business value, not technical details."><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Generate Business Pitch</button>
+            </div>
+            `,
+            // Slide 3: The Case for Modernization
+            `
+            <div class="slide-content text-left">
+                <h2 class="text-3xl font-bold mb-6 text-indigo-700">The Case for Modernization</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                    <div class="card border-l-4 border-red-500">
+                        <h3 class="text-xl font-semibold mb-3 text-red-600">Monolith Challenges</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>High coupling & complexity</li>
+                            <li>Inefficient scaling</li>
+                            <li>Technology lock-in</li>
+                            <li>Reduced developer velocity</li>
+                        </ul>
+                    </div>
+                    <div class="card border-l-4 border-green-500">
+                        <h3 class="text-xl font-semibold mb-3 text-green-600">Cloud-Native Benefits</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>Improved scalability & resilience</li>
+                            <li>Increased agility & autonomy</li>
+                            <li>Technological flexibility</li>
+                            <li>Enhanced Observability</li>
+                            <li>Shift Left Quality Process</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="mt-8 p-4 bg-indigo-100 border border-indigo-200 rounded-lg text-lg w-full">
+                    <p><b>Key Insight:</b> Wrapping the monolith in Spring Boot provides a stable, modern foundation without altering proven business logic, enabling immediate, low-risk improvements.</p>
+                </div>
+                <button class="gemini-btn" data-prompt="Explain the concept of 'technical debt' in the context of a 13-year-old monolithic application. What are its real-world business impacts on things like feature delivery, bug fixes, and operational costs?"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Explain Technical Debt</button>
+            </div>
+            `,
+            // Slide 4: Foundational Principles
+            `
+            <div class="slide-content text-left">
+                 <h2 class="text-3xl font-bold mb-6 text-indigo-700">Foundational Principles</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                    <div class="card">
+                        <h3 class="text-2xl font-semibold mb-3 flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500"><path d="M10 22v-8M14 22v-8"/><path d="M4 14a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z"/><path d="M4 14h.01"/><path d="M4 18h.01"/><path d="M10 14h.01"/><path d="M10 18h.01"/><path d="M14 14h.01"/><path d="M14 18h.01"/><path d="M20 14h.01"/><path d="M20 18h.01"/></svg> The Strangler Fig Pattern</h3>
+                        <p class="text-lg text-gray-600">Incrementally replace the legacy system. An API Gateway intercepts requests, routing them to either the monolith or new microservices, mitigating risk by keeping the monolith operational.</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-2xl font-semibold mb-3 flex items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="m9 12-2 2 4 4"/><path d="M13.5 3.5 21 11"/><path d="M15 12h6"/><path d="M3 3v2c0 4.4 3.6 8 8 8h2"/><path d="M3 15h4"/></svg> Shift-Left Quality Strategy</h3>
+                        <p class="text-lg text-gray-600">Move testing to the earliest stages of development. Automated tests in the CI/CD pipeline create a safety net, catch regressions early, and accelerate development.</p>
+                    </div>
+                 </div>
+                 <button class="gemini-btn" data-prompt="Compare and contrast the Strangler Fig pattern with a 'big bang' rewrite. Explain the key differences in terms of risk, business continuity, and delivering value over time."><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Compare Methodologies</button>
+            </div>
+            `,
+            // Slide 5: High-Level Roadmap
+            `
+            <div class="slide-content text-left w-full">
+                <h2 class="text-3xl font-bold mb-6 text-indigo-700">High-Level Phased Roadmap</h2>
+                <div class="relative w-full pl-8">
+                    <!-- Vertical Line -->
+                    <div class="absolute left-12 top-4 bottom-4 w-1 bg-indigo-200 rounded-full"></div>
+                    
+                    <div class="relative mb-8 card opacity-70">
+                        <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold ring-8 ring-white">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <div class="flex items-center">
+                            <h3 class="text-xl font-semibold text-gray-500">Phase 0: Preparation & Analysis</h3>
+                            <span class="ml-3 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">DONE</span>
+                        </div>
+                        <p class="text-gray-500 mt-2">Establish baseline, create regression tests, set up CI/CD infrastructure.</p>
+                    </div>
+                    <div class="relative mb-8 card">
+                         <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold ring-8 ring-white">1</div>
+                        <h3 class="text-xl font-semibold text-green-800">Phase 1: The Hybrid Monolith</h3>
+                        <p class="text-gray-600">Encapsulate in Spring Boot, migrate web.xml, and begin refactoring servlets.</p>
+                    </div>
+                    <div class="relative mb-8 card">
+                         <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-bold ring-8 ring-white">2</div>
+                        <h3 class="text-xl font-semibold text-yellow-800">Phase 2: Cloud Enablement</h3>
+                        <p class="text-gray-600">Package in Docker, deploy to an orchestrator, and configure health probes.</p>
+                    </div>
+                    <div class="relative card">
+                         <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold ring-8 ring-white">3</div>
+                        <h3 class="text-xl font-semibold text-purple-800">Phase 3: The Strangler Fig</h3>
+                        <p class="text-gray-600">Gradually decompose the monolith into independent microservices.</p>
+                    </div>
+                </div>
+                <button class="gemini-btn" data-prompt="For the provided 4-phase migration roadmap (Preparation, Hybrid Monolith, Cloud Enablement, Strangler Fig), identify 3 potential risks or challenges and suggest a brief mitigation strategy for each."><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Analyze Risks</button>
+            </div>
+            `,
+            // Phase 0
+            `
+            <div class="slide-content text-left w-full">
+                <div class="flex items-center gap-3 mb-6">
+                    <h2 class="text-3xl font-bold text-gray-500">Phase 0: Preparation & Analysis</h2>
+                    <span class="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">DONE</span>
+                </div>
+                <p class="text-lg text-gray-500 mb-6">Laying the groundwork for a successful migration.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full opacity-70">
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-indigo-700">Objective</h3>
+                        <p>Establish a comprehensive baseline and prepare the technical and organizational ground for the migration to minimize surprises.</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-indigo-700">Key Deliverables</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>Comprehensive dependency analysis.</li>
+                            <li>Creation of a regression test suite for critical user journeys.</li>
+                            <li>Baseline performance and resource utilization metrics.</li>
+                            <li>Establishment of CI/CD infrastructure.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            `,
+            // Phase 1
+            `
+            <div class="slide-content text-left w-full">
+                <h2 class="text-3xl font-bold mb-2 text-green-700">Phase 1: The Hybrid Monolith</h2>
+                <p class="text-lg text-gray-500 mb-6">Encapsulate the legacy application within a modern runtime.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-green-800">Key Step 1: Modernize Configuration</h3>
+                        <p>Wrap the legacy WAR in a new Spring Boot application. The first action is to migrate the XML-based <code class="bg-gray-200 p-1 rounded">web.xml</code> to type-safe, version-controlled Java <code class="bg-gray-200 p-1 rounded">@Configuration</code> classes.</p>
+                    </div>
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-green-800">Key Step 2: Incremental Refactoring</h3>
+                        <p>Begin replacing legacy Servlets with modern Spring MVC Controllers one by one. Both will coexist during the transition, managed by careful URL mapping.</p>
+                    </div>
+                </div>
+                 <div class="mt-6 p-4 bg-green-100 border border-green-200 rounded-lg w-full">
+                    <h4 class="font-semibold text-lg mb-2 text-green-800">Business Gains</h4>
+                    <ul class="list-disc list-inside text-gray-700">
+                        <li><b>Enhanced Maintainability:</b> Java-based configuration is type-safe and easier for developers to understand and version.</li>
+                        <li><b>Increased Agility:</b> Introduces modern development tools and a "Shift-Left" testing culture, enabling faster, safer changes.</li>
+                        <li><b>Enhanced Observability:</b> Instantly gain baseline metrics (JVM, CPU, etc.) and health checks using Spring Boot Actuator.</li>
+                    </ul>
+                </div>
+                <button class="gemini-btn" data-prompt="What is a 'hybrid monolith' in the context of this migration? Explain how legacy servlets and new Spring MVC controllers can coexist in the same application and why this is a crucial intermediate step."><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Explain Hybrid Monolith</button>
+            </div>
+            `,
+            // Phase 2
+            `
+            <div class="slide-content text-left w-full">
+                <h2 class="text-3xl font-bold mb-2 text-yellow-700">Phase 2: Cloud Enablement</h2>
+                <p class="text-lg text-gray-500 mb-6">Package and deploy the application for a cloud environment.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-yellow-800">Packaging for the Cloud</h3>
+                        <p>Create an optimized, secure Docker image using multi-stage builds and layered JARs to reduce image size and improve CI/CD speed.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-yellow-800">Orchestration & Deployment</h3>
+                        <p>Deploy the container to an orchestrator like Kubernetes using declarative manifests. Configure liveness and readiness probes for automated health management.</p>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-yellow-100 border border-yellow-200 rounded-lg w-full">
+                    <h4 class="font-semibold text-lg mb-2 text-yellow-800">Business Gains</h4>
+                    <ul class="list-disc list-inside text-gray-700">
+                         <li><b>Improved Scalability & Resilience:</b> The orchestrator can automatically scale the application and restart failed instances, improving uptime.</li>
+                         <li><b>Increased Agility:</b> Containerization and layered JARs lead to faster, more consistent, and more reliable deployments.</li>
+                         <li><b>Enhanced Observability:</b> Enables centralized logging and automated health management by the platform.</li>
+                    </ul>
+                </div>
+                <button class="gemini-btn" data-prompt="Explain the benefits of using Kubernetes for orchestration in this phase. What are Deployments, Services, and Health Probes?"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Explain Kubernetes Concepts</button>
+            </div>
+            `,
+            // Phase 3
+            `
+            <div class="slide-content text-left w-full">
+                <h2 class="text-3xl font-bold mb-2 text-purple-700">Phase 3: The Strangler Fig</h2>
+                <p class="text-lg text-gray-500 mb-6">Gradually decompose the monolith into microservices.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-purple-800">Implementing the Façade</h3>
+                        <p>Deploy a reverse proxy (e.g., NGINX) to intercept and route traffic. Initially, all requests go to the monolith. As new services come online, the proxy routes specific paths to them.</p>
+                    </div>
+                     <div class="card">
+                        <h3 class="font-semibold text-xl mb-2 text-purple-800">Decomposition & Data</h3>
+                        <p>Identify service boundaries using Domain-Driven Design. Extract services one by one, and tackle the "Database Dilemma" by moving towards a database-per-service model.</p>
+                    </div>
+                </div>
+                 <div class="mt-6 p-4 bg-purple-100 border border-purple-200 rounded-lg w-full">
+                    <h4 class="font-semibold text-lg mb-2 text-purple-800">Business Gains</h4>
+                    <ul class="list-disc list-inside text-gray-700">
+                        <li><b>Increased Agility & Team Autonomy:</b> Small, focused teams can own, develop, and deploy their services independently, accelerating feature delivery.</li>
+                        <li><b>Technological Flexibility:</b> Teams can choose the best technology stack for their specific service, fostering innovation.</li>
+                        <li><b>Enhanced Observability:</b> Distributed tracing provides an end-to-end view of requests across all services.</li>
+                    </ul>
+                </div>
+                <button class="gemini-btn" data-prompt="Explain the concept of 'Domain-Driven Design (DDD)' for identifying microservice boundaries. What is a 'Bounded Context' and how does it help avoid creating a distributed monolith?"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Explain DDD</button>
+            </div>
+            `,
+            // Database Dilemma
+            `
+            <div class="slide-content text-left w-full">
+                <h2 class="text-3xl font-bold mb-4 text-purple-700">Phase 3 Focus: The Database Dilemma</h2>
+                <p class="text-lg mb-4 text-gray-600">True decoupling is only achieved when data is also decoupled. This is the most complex challenge.</p>
+                <table class="w-full border-collapse card">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="table-cell font-semibold">Architectural Concern</th>
+                            <th class="table-cell text-red-600 font-semibold">Shared Database (Anti-Pattern)</th>
+                            <th class="table-cell text-green-600 font-semibold">Database-per-Service (Target)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr><td class="table-cell font-medium">Coupling</td><td class="table-cell">High: Schema changes can break other services.</td><td class="table-cell">Low: Data is private, accessed via API.</td></tr>
+                        <tr><td class="table-cell font-medium">Scalability</td><td class="table-cell">Low: Monolithic database is a bottleneck.</td><td class="table-cell">High: Each database can be scaled independently.</td></tr>
+                        <tr><td class="table-cell font-medium">Resilience</td><td class="table-cell">Low: Single point of failure for the system.</td><td class="table-cell">High: Failures are isolated to a single service.</td></tr>
+                        <tr><td class="table-cell font-medium">Team Autonomy</td><td class="table-cell">Low: Teams must coordinate schema changes.</td><td class="table-cell">High: Teams have full ownership of their data store.</td></tr>
+                        <tr><td class="table-cell font-medium">Data Consistency</td><td class="table-cell">Strong (ACID)</td><td class="table-cell">Eventual (Requires patterns like Saga)</td></tr>
+                        <tr><td class="table-cell font-medium">Operational Complexity</td><td class="table-cell">Low: Simpler to operate single database.</td><td class="table-cell">High: Requires managing multiple databases.</td></tr>
+                    </tbody>
+                </table>
+                <button class="gemini-btn" data-prompt="For a microservice migration facing the 'Database Dilemma', explain the Saga pattern as a way to maintain data consistency. Provide a simple, conceptual example (e.g., an e-commerce order)."><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg> Explain Saga Pattern</button>
+            </div>
+            `,
+            // Conclusion
+            `
+            <div class="slide-content text-center bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+                <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+                <h2 class="text-4xl font-bold mb-6">Conclusion & Next Steps</h2>
+                <p class="text-xl mb-8 max-w-3xl text-gray-300">This roadmap provides a structured, low-risk path to transform your legacy application into a resilient, scalable, and agile cloud-native system.</p>
+                <div class="text-2xl font-semibold text-indigo-300">
+                    <p>Questions?</p>
+                </div>
+            </div>
+            `
+        ];
+
+        let currentSlide = 0;
+        const presentationContainer = document.getElementById('presentation');
+        const slideContainer = presentationContainer.querySelector('.flex-grow');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const slideCounter = document.getElementById('slide-counter');
+        
+        const modal = document.getElementById('ai-modal');
+        const modalContent = document.getElementById('ai-modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const apiKeyInput = document.getElementById('api-key-input');
+
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const enterFsIcon = fullscreenBtn.querySelector('.icon-enter-fs');
+        const exitFsIcon = fullscreenBtn.querySelector('.icon-exit-fs');
+        const printBtn = document.getElementById('print-btn');
+
+        function showSlide(index) {
+            const currentSlideEl = document.getElementById(`slide-${currentSlide}`);
+            if (currentSlideEl) currentSlideEl.classList.remove('active');
+            
+            const nextSlideEl = document.getElementById(`slide-${index}`);
+            if (nextSlideEl) nextSlideEl.classList.add('active');
+            
+            currentSlide = index;
+            updateControls();
+        }
+        
+        function updateControls() {
+            slideCounter.textContent = `Slide ${currentSlide + 1} of ${slides.length}`;
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function init() {
+            slideContainer.innerHTML = slides.map((content, i) => 
+                `<div id="slide-${i}" class="slide w-full h-full">${content}</div>`
+            ).join('');
+            
+            showSlide(0);
+            setupGeminiButtons();
+            setupSettingsModal();
+            setupFullscreen();
+            setupPrint();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            const isModalOpen = modal.style.display === 'flex' || settingsModal.style.display === 'flex';
+            if (e.key === 'ArrowRight' && !isModalOpen) {
+                nextBtn.click();
+            } else if (e.key === 'ArrowLeft' && !isModalOpen) {
+                prevBtn.click();
+            } else if (e.key === 'Escape') {
+                 if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else if (isModalOpen) {
+                    closeModal();
+                    closeSettings();
+                }
+            }
+        });
+
+        // --- Fullscreen ---
+        function setupFullscreen() {
+            fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                const isFullscreen = !!document.fullscreenElement;
+                document.body.classList.toggle('is-fullscreen', isFullscreen);
+                enterFsIcon.style.display = isFullscreen ? 'none' : 'block';
+                exitFsIcon.style.display = isFullscreen ? 'block' : 'none';
+            });
+        }
+
+        // --- Print ---
+        function setupPrint() {
+            printBtn.addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        // --- Settings Modal ---
+        function setupSettingsModal() {
+            settingsBtn.addEventListener('click', () => {
+                apiKeyInput.value = localStorage.getItem('geminiApiKey') || '';
+                settingsModal.style.display = 'flex';
+            });
+            closeSettingsBtn.addEventListener('click', closeSettings);
+            saveApiKeyBtn.addEventListener('click', () => {
+                if (apiKeyInput.value) {
+                    localStorage.setItem('geminiApiKey', apiKeyInput.value);
+                    closeSettings();
+                }
+            });
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        // --- Gemini API Integration ---
+
+        function setupGeminiButtons() {
+            document.querySelectorAll('.gemini-btn').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const prompt = button.dataset.prompt;
+                    const slideContent = slides[currentSlide]; 
+                    const fullPrompt = `CONTEXT:\n${slideContent}\n\nTASK:\n${prompt}`;
+                    
+                    showModal();
+                    
+                    try {
+                        const text = await callGeminiApi(fullPrompt);
+                        displayModalContent(text);
+                    } catch (error) {
+                        console.error('Gemini API call failed:', error);
+                        const errorMessage = `<div class="prose max-w-none"><p class="text-red-600 font-semibold">Error: ${error.message}</p><p class="mt-4">When running this file locally, the AI features require a Google AI Studio API key. Please click the gear icon (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block align-middle"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>) in the control bar to add your key.</p></div>`;
+                        displayModalContent(errorMessage, true);
+                    }
+                });
+            });
+        }
+
+        function showModal() {
+            modal.style.display = 'flex';
+            modalContent.innerHTML = '<div class="flex justify-center items-center h-full"><div class="loader"></div></div>';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            modalContent.innerHTML = '';
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        function displayModalContent(content, isRawHtml = false) {
+            if (isRawHtml) {
+                modalContent.innerHTML = content;
+                return;
+            }
+            let formattedContent = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+)`/g, '<code class="bg-gray-200 text-red-600 font-mono text-sm p-1 rounded">$1</code>')
+                .replace(/\n/g, '<br>');
+            modalContent.innerHTML = `<div class="prose prose-indigo max-w-none">${formattedContent}</div>`;
+        }
+
+        async function callGeminiApi(prompt) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            const finalApiKey = apiKey || "";
+
+            if (!finalApiKey && !window.__app_id) {
+                 throw new Error("API key not found.");
+            }
+
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${finalApiKey}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                const errorMsg = errorBody?.error?.message || 'Unknown API error.';
+                throw new Error(`API request failed: ${errorMsg}`);
+            }
+
+            const result = await response.json();
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                console.warn("Unexpected API response structure:", result);
+                if (result.promptFeedback && result.promptFeedback.blockReason) {
+                    return `Request was blocked. Reason: ${result.promptFeedback.blockReason}`;
+                }
+                return "No content received from the API.";
+            }
+        }
+
+        init();
+    </script>
+
+</body>
+</html>

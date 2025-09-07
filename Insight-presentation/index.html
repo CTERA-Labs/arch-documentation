@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a192f;
+            color: #ccd6f6;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* Hide by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 1;
+            padding: 2rem 4rem;
+        }
+        .slide.active {
+            display: flex; /* Show when active */
+            opacity: 1;
+            z-index: 2;
+        }
+        #bottomNav {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 10;
+            background-color: rgba(10, 25, 47, 0.7);
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            border: 1px solid #1e293b;
+        }
+        .nav-button, .page-btn {
+            background-color: transparent;
+            color: #ccd6f6;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-button:hover, .page-btn:hover {
+            background-color: rgba(100, 255, 218, 0.2);
+            color: #64ffda;
+        }
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+         #slideCounter {
+            font-size: 0.875rem;
+            min-width: 40px;
+            text-align: center;
+        }
+        .page-btn.active {
+            background-color: #64ffda;
+            color: #0a192f;
+            font-weight: bold;
+        }
+        #fullscreenBtn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background-color: rgba(100, 255, 218, 0.2);
+            color: #64ffda;
+            border: 1px solid #64ffda;
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        #fullscreenBtn:hover {
+             background-color: rgba(100, 255, 218, 0.4);
+             transform: scale(1.05);
+        }
+        table { border: 1px solid #1e293b; }
+        th, td { border: 1px solid #1e293b; padding: 1rem; vertical-align: top; }
+        th { background-color: #1e293b; color: #64ffda; font-weight: bold; }
+        td { background-color: rgba(10, 25, 47, 0.5); }
+        ul li svg { color: #64ffda; }
+        .clickable-img { cursor: pointer; transition: transform 0.2s ease-in-out; }
+        .clickable-img:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="w-screen h-screen">
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Slides (content unchanged) -->
+    <!-- Slide 1: Title Slide -->
+    <div class="slide active text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h1 class="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-4">Insight</h1>
+        <p class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-cyan-400 font-bold tracking-tight">Architecture and Business Model Evolution</p>
+    </div>
+    <!-- Slide 2: Why Are We Here? -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-4 tracking-tight">The Strategic Imperative for Change</h2>
+        <div class="text-lg md:text-xl text-left max-w-5xl w-full space-y-6 mt-8">
+            <div class="bg-slate-800 p-6 rounded-lg">
+                <h3 class="font-bold text-xl text-white mb-2">Architectural Limitations</h3>
+                <p>Certain advanced capabilities are becoming difficult to implement, including:
+                    <ul class="list-disc list-inside mt-2 text-gray-300">
+                        <li>Real-time analytics</li>
+                        <li>AI Functionalities</li>
+                        <li>SIEM capabilities</li>
+                    </ul>
+                </p>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-lg">
+                <h3 class="font-bold text-xl text-white mb-2">Market Gaps</h3>
+                <p>We lack a compelling solution for highly regulated customers with strict data residency and sovereignty requirements, limiting our market reach.</p>
+            </div>
+        </div>
+    </div>
+    <!-- Slide 3: Required Features -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-8 tracking-tight">Core Capabilities for the Next-Generation Platform</h2>
+        <ul class="text-lg md:text-xl text-left max-w-5xl w-full space-y-4">
+            <li class="flex items-start"><svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong class="text-white">Real time analytics dashboard:</strong> Low-latency, interactive monitoring.</span></li>
+            <li class="flex items-start"><svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong class="text-white">AI Functionalities:</strong> Anomaly detection, RCA, and conversational search (RAG).</span></li>
+            <li class="flex items-start"><svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong class="text-white">Security Analytics (SIEM):</strong> Real-time threat detection from audit logs.</span></li>
+            <li class="flex items-start"><svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong class="text-white">Long-Term Analytics:</strong> Deep analysis of historical data for compliance and trends.</span></li>
+            <li class="flex items-start"><svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong class="text-white">Architectural Flexibility:</strong> A cloud-agnostic, open-source foundation.</span></li>
+        </ul>
+    </div>
+    <!-- Slide 4: OpenSearch Architecture -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-2 tracking-tight">Proposed Architecture: OpenSearch</h2>
+        <p class="max-w-4xl text-lg mb-4">A community-driven, open-source search and analytics suite, ideal for log analytics, real-time monitoring, and security.</p>
+        <img src="os_arch.svg" class="clickable-img max-w-lg md:max-w-4xl lg:max-w-5xl h-auto mt-4 rounded-lg shadow-lg" alt="OpenSearch Architecture Diagram">
+    </div>
+    <!-- Slide 5: Technical Comparison -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-4 tracking-tight">Architectural Approaches & Tradeoffs</h2>
+        <p class="text-lg text-gray-400 mb-6">A look at how each potential architecture aligns with our required features.</p>
+        <div class="w-full max-w-7xl mt-4">
+            <table class="w-full text-left border-collapse text-sm md:text-base">
+                <thead>
+                    <tr>
+                        <th class="w-1/4">Feature / Capability</th>
+                        <th class="w-3/8">OpenSearch Only</th>
+                        <th class="w-3/8">Iceberg + Athena</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Real time analytics dashboard</strong></td><td><strong>Optimized for this use case;</strong> provides sub-second latency for interactive exploration.</td><td><strong>Less suited for real-time dashboards;</strong> higher query latency is designed for ad-hoc analysis.</td></tr>
+                    <tr><td><strong>AI Functionalities (Anomaly detection, RAG)</strong></td><td><strong>Natively supported;</strong> excels at real-time anomaly detection and vector search via ML Commons.</td><td><strong>Supports batch ML model training;</strong> not designed for real-time AI/RAG functionalities.</td></tr>
+                    <tr><td><strong>Security Analytics (SIEM)</strong></td><td><strong>Purpose-built for this task;</strong> provides a native, real-time Security Analytics engine.</td><td><strong>Not a primary use case;</strong> lacks a real-time threat detection engine.</td></tr>
+                    <tr><td><strong>Long-Term Analytics</strong></td><td><strong>Cost-effective up to ~1 year</strong> with warm tiers; becomes expensive for multi-year retention.</td><td><strong>Highly optimized for this;</strong> offers very low-cost, long-term archival on object storage.</td></tr>
+                    <tr><td><strong>Architectural Flexibility</strong></td><td><strong>Strongly aligned;</strong> fully open-source stack, portable across clouds using Kubernetes.</td><td><strong>Generally strong, but with potential cloud dependencies</strong> for large-scale AI/ML development.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Slide 6: New Business Model Segue -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-6xl lg:text-7xl font-black text-white italic tracking-tight leading-tight max-w-5xl">...But what about customers who won't accept SaaS?</h2>
+    </div>
+    <!-- Slide 7: The BYOC Model -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-4 tracking-tight">The BYOC Model: Control Meets Convenience</h2>
+        <p class="text-lg text-gray-400 mb-6">Your Data, Your Cloud, Our Expertise: Deploy and manage our solution within the customer's secure cloud.</p>
+        <div class="w-full max-w-7xl mt-4">
+            <table class="w-full text-left border-collapse text-sm md:text-base">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Data Residency & Control</th>
+                        <th>Infra Responsibility</th>
+                        <th>Application Responsibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>SaaS</td><td>Resides in vendor's cloud; vendor has control</td><td>Vendor (us)</td><td>Vendor (us)</td></tr>
+                    <tr class="bg-cyan-900/50"><td class="text-white font-bold">BYOC</td><td class="text-white"><strong>Resides in customer's cloud; customer has full control</strong></td><td class="text-white"><strong>Customer</strong></td><td class="text-white"><strong>Vendor (us)</strong></td></tr>
+                    <tr><td>Traditional ISV</td><td>Resides on-premise; customer has full control</td><td>Customer</td><td>Customer</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Slide 8: Platform Engineering -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8" alt="CTERA Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-cyan-400 mb-2 tracking-tight">Platform Engineering for Seamless Management</h2>
+        <p class="max-w-4xl text-lg mb-4">A central, secure Management Cluster automates deployment and lifecycle management within each customer's environment using a GitOps factory model.</p>
+        <img src="PE_BYOC.svg" class="clickable-img max-w-lg md:max-w-4xl lg:max-w-5xl h-auto mt-4 rounded-lg shadow-lg" alt="BYOC Platform Architecture">
+    </div>
+
+    <!-- Navigation -->
+    <div id="bottomNav">
+        <button id="prevBtn" class="nav-button">&lt;</button>
+        <div id="slideCounter">1 / 8</div>
+        <div id="pagination" class="flex gap-1"></div>
+        <button id="nextBtn" class="nav-button">&gt;</button>
+    </div>
+    
+    <button id="fullscreenBtn" title="Toggle Fullscreen">
+        <svg id="fullscreenIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v-4m0 0h-4m4 4l-5-5"></path></svg>
+        <svg id="exitFullscreenIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H4v6m16 4v6h-6m-10 0L4 20m16-16l-6 6"></path></svg>
+    </button>
+    
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-80 items-center justify-center hidden z-50">
+        <span id="closeModal" class="absolute top-4 right-6 text-white text-4xl font-bold cursor-pointer hover:text-cyan-400 transition-colors">&times;</span>
+        <img id="modalImage" src="" alt="Enlarged Diagram" class="max-w-[90vw] max-h-[90vh] object-contain">
+    </div>
+
+    <script>
+        // Background canvas animation (logic unchanged)
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let dots = [];
+        const numDots = 50;
+        class Dot {
+            constructor(x, y, radius, color) { this.x = x; this.y = y; this.radius = radius; this.color = color; this.vx = Math.random() * 0.4 - 0.2; this.vy = Math.random() * 0.4 - 0.2; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
+            update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > canvas.width) this.vx *= -1; if (this.y < 0 || this.y > canvas.height) this.vy *= -1; this.draw(); }
+        }
+        function init() { dots = []; for (let i = 0; i < numDots; i++) { dots.push(new Dot(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2 + 1, 'rgba(100, 255, 218, 0.3)')); } }
+        function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); dots.forEach(dot => dot.update()); requestAnimationFrame(animate); }
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; init(); });
+        init();
+        animate();
+
+        // Slide navigation
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slideCounter = document.getElementById('slideCounter');
+        const paginationContainer = document.getElementById('pagination');
+        let currentSlide = 0;
+        let isScrolling = false; // Debounce flag for scroll
+
+        function updatePagination() {
+            const pageButtons = document.querySelectorAll('.page-btn');
+            pageButtons.forEach((btn, i) => {
+                btn.classList.toggle('active', i === currentSlide);
+            });
+        }
+
+        function showSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            currentSlide = index;
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+            prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.5' : '1';
+            updatePagination();
+        }
+        
+        // Create pagination buttons
+        slides.forEach((_, i) => {
+            const btn = document.createElement('button');
+            btn.textContent = i + 1;
+            btn.classList.add('page-btn');
+            btn.addEventListener('click', () => showSlide(i));
+            paginationContainer.appendChild(btn);
+        });
+
+        function goToNextSlide() {
+            if (currentSlide < slides.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        function goToPrevSlide() {
+             if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        nextBtn.addEventListener('click', goToNextSlide);
+        prevBtn.addEventListener('click', goToPrevSlide);
+        
+        document.addEventListener('keydown', (e) => {
+            if (modal.classList.contains('hidden')) { // only navigate if modal is not open
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    goToNextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    goToPrevSlide();
+                }
+            }
+        });
+
+        document.addEventListener('wheel', (e) => {
+            if (isScrolling || !modal.classList.contains('hidden')) return;
+            isScrolling = true;
+            if (e.deltaY > 0) { // Scrolling down
+                goToNextSlide();
+            } else { // Scrolling up
+                goToPrevSlide();
+            }
+            setTimeout(() => { isScrolling = false; }, 500); // Debounce for 500ms
+        });
+
+        showSlide(0);
+
+        // Image Modal Logic (logic unchanged)
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const closeModal = document.getElementById('closeModal');
+        const clickableImages = document.querySelectorAll('.clickable-img');
+        clickableImages.forEach(img => { img.addEventListener('click', () => { modal.classList.remove('hidden'); modal.classList.add('flex'); modalImg.src = img.src; }); });
+        function hideModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); modalImg.src = ""; }
+        closeModal.addEventListener('click', hideModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) { hideModal(); } });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) { hideModal(); } });
+
+        // Fullscreen Logic
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const fullscreenIcon = document.getElementById('fullscreenIcon');
+        const exitFullscreenIcon = document.getElementById('exitFullscreenIcon');
+        
+        fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenIcon.classList.add('hidden');
+                exitFullscreenIcon.classList.remove('hidden');
+            } else {
+                fullscreenIcon.classList.remove('hidden');
+                exitFullscreenIcon.classList.add('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
+

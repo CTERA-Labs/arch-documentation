@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Data Architecture Cost Calculator</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-color: #343a40;
+            --border-color: #dee2e6;
+            --success-color: #28a745;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 960px;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+        }
+        
+        main {
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+        }
+
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        #advanced-config {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+            margin-top: 0;
+        }
+
+        #advanced-config.show {
+            max-height: 500px; /* Adjust as needed */
+            margin-top: 2rem;
+        }
+
+        #results-card {
+            display: none; /* Hidden by default */
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .results-table th, .results-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-table th {
+            background-color: var(--background-color);
+            font-weight: 600;
+        }
+        
+        .results-table td:nth-child(2), .results-table td:nth-child(3) {
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace;
+            text-align: right;
+        }
+
+        .results-table tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        .results-table tbody tr[data-architecture]:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        .disclaimer {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 8px;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+        }
+        
+        .aws-costs-table, .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .aws-costs-table th, .aws-costs-table td,
+        .breakdown-table th, .breakdown-table td {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        .aws-costs-table th, .breakdown-table th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .breakdown-table th {
+             width: 35%;
+        }
+        .breakdown-table .formula {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-style: italic;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .breakdown-table tr.component-row {
+            cursor: pointer;
+        }
+        .breakdown-table tr.component-row:hover {
+            background-color: #f7f7f7;
+        }
+        .breakdown-table .detail-row td {
+            text-align: left;
+        }
+        .calculation-detail {
+            background-color: #fafafa;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            border-top: 1px dashed var(--border-color);
+            text-align: left;
+        }
+        
+        #export-options-modal .input-group {
+            align-items: flex-start;
+            gap: 1rem;
+        }
+         #export-options-modal .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Cloud Data Architecture Cost Calculator</h1>
+            <button id="info-btn" class="btn btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; padding: 0.5rem 1rem;">ⓘ Model Info</button>
+        </header>
+
+        <main>
+            <!-- Inputs Section -->
+            <div class="card" id="inputs-card">
+                <h2>1. Configuration Inputs</h2>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="num-files">Number of Files (e.g., 500M, 2.5B)</label>
+                        <input type="text" id="num-files" value="2.5B">
+                    </div>
+                    <div class="input-group">
+                        <label for="hot-retention">Hot Tier Retention (Days)</label>
+                        <input type="number" id="hot-retention" value="7">
+                    </div>
+                    <div class="input-group">
+                        <label for="warm-retention">Warm Tier Retention (Days)</label>
+                        <input type="number" id="warm-retention" value="365">
+                    </div>
+                    <div class="input-group">
+                        <label for="iceberg-retention">Iceberg Retention (Days)</label>
+                        <input type="number" id="iceberg-retention" value="365">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="calculate-btn" class="btn btn-primary">Calculate Costs</button>
+                    <button id="toggle-advanced-btn" class="btn btn-secondary">Advanced Configuration</button>
+                    <button id="view-aws-costs-btn" class="btn btn-success">View AWS Costs</button>
+                </div>
+
+                <!-- Advanced Configuration Section -->
+                <div id="advanced-config">
+                    <div class="card">
+                        <h2>Advanced Configuration</h2>
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="metadata-size">Metadata Record Size (KB)</label>
+                                <input type="number" id="metadata-size" step="0.1" value="0.5">
+                            </div>
+                            <div class="input-group">
+                                <label for="audit-events">Audit Log Events per Change</label>
+                                <input type="number" id="audit-events" value="3">
+                            </div>
+                            <div class="input-group">
+                                <label for="audit-size">Audit Log Record Size (KB)</label>
+                                <input type="number" id="audit-size" step="0.05" value="0.25">
+                            </div>
+                            <div class="input-group">
+                                <label for="change-rate">Daily Change Rate (%)</label>
+                                <input type="number" id="change-rate" step="0.1" value="0.5">
+                            </div>
+                            <div class="input-group">
+                                <label for="replica-count">OpenSearch Replica Count (Hot)</label>
+                                <input type="number" id="replica-count" value="1">
+                            </div>
+                            <div class="input-group">
+                                <label for="athena-scan-percent">Athena Query Scan (%)</label>
+                                <input type="number" id="athena-scan-percent" step="0.1" value="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="card" id="results-card">
+                <h2>2. Cost Analysis</h2>
+                <p>Click on a row for a detailed cost breakdown.</p>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Architecture</th>
+                            <th>Monthly Cost</th>
+                            <th>3-Year Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        <tr data-architecture="os">
+                            <td>OpenSearch Only <span class="disclaimer" id="os-disclaimer-btn">ⓘ</span></td>
+                            <td id="os-monthly">$0</td>
+                            <td id="os-3year">$0</td>
+                        </tr>
+                        <tr data-architecture="iceberg">
+                            <td>Iceberg + Athena <span class="disclaimer" id="iceberg-disclaimer-btn">ⓘ</span></td>
+                            <td id="iceberg-monthly">$0</td>
+                            <td id="iceberg-3year">$0</td>
+                        </tr>
+                        <tr data-architecture="hybrid">
+                            <td>Hybrid (Both)</td>
+                            <td id="hybrid-monthly">$0</td>
+                            <td id="hybrid-3year">$0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <div class="button-group">
+                    <button id="export-btn" class="btn btn-secondary">Export to Sheets (CSV)</button>
+                    <button id="export-pdf-btn" class="btn btn-secondary">Export to PDF</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AWS Costs Modal -->
+    <div id="aws-costs-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-aws-modal">&times;</span>
+            <h2>AWS Resource Costs</h2>
+            <p>The following costs are used in the calculations. These are based on us-east-1 region and may vary.</p>
+            <div id="aws-costs-container"></div>
+        </div>
+    </div>
+
+    <!-- OS Disclaimer Modal -->
+    <div id="os-disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-os-disclaimer-modal">&times;</span>
+            <h2>OpenSearch Only Retention</h2>
+            <p>The "OpenSearch Only" architecture retains data only for the duration specified in the Hot and Warm tier retention periods. The 3-year cost reflects running this architecture continuously, but it does not imply 3 years of data retention. Long-term archival is not part of this specific configuration.</p>
+        </div>
+    </div>
+
+    <!-- Iceberg Disclaimer Modal -->
+    <div id="iceberg-disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-iceberg-disclaimer-modal">&times;</span>
+            <h2>Iceberg Storage Cost Calculation</h2>
+            <p>The storage for the Iceberg + Athena architecture grows every single day until it reaches the end of its retention period (e.g., 3 years).</p>
+            <p>This calculation is based on the <strong>total storage volume at the end of the retention period</strong>. The resulting monthly cost represents the "steady-state" or "peak" cost you will pay once the archive is fully mature.</p>
+            <p><strong>Formula:</strong> Peak Storage = (Initial Size) + (Total Growth over Period)</p>
+            <p>This method is useful for understanding the maximum budget required for the storage component once it is fully scaled.</p>
+        </div>
+    </div>
+
+    <!-- Main Info Modal -->
+    <div id="main-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-main-info-modal">&times;</span>
+            <h2>Cost Model Calculation Explained</h2>
+            <p>This document details the logic behind the Cloud Data Architecture Cost Calculator. The model is designed to provide a dynamic and transparent cost estimation for three different data architectures.</p>
+
+            <h3>Core Calculation Principles</h3>
+            <ol>
+                <li><strong>Data Volume Sizing:</strong> The calculation starts by determining the daily data ingest volume based on the number of files and the daily change rate. For the Hot and Warm tiers, it calculates a "steady-state" volume capped by the retention period, not an ever-growing total.</li>
+                <li><strong>Dynamic Node Sizing:</strong> A key feature is the dynamic selection of OpenSearch EC2 instance types (m6g.large, xlarge, 2xlarge) based on the calculated storage requirements for the Hot and Warm tiers. This ensures cost-effectiveness by avoiding over-provisioning.</li>
+                <li><strong>Replica-Aware Hot Tier Costs:</strong> The model explicitly accounts for OpenSearch replicas in the Hot Tier. Both storage and compute costs for the hot tier are scaled based on the replica count, ensuring that the costs for data redundancy and high availability are accurately reflected.</li>
+                <li><strong>Peak Iceberg Storage Cost:</strong> For the Iceberg architecture, storage grows daily. This model calculates the cost based on the <strong>total storage volume at the end of the retention period</strong>. This provides a "peak cost" or "steady-state" monthly figure, representing the cost you will pay once the archive is fully mature.</li>
+                <li><strong>Fixed Infrastructure Cost:</strong> A fixed monthly cost of $400 is added to all architectures to account for essential, shared services such as ECS, management EC2 instances, and RDS that are required regardless of data volume.</li>
+            </ol>
+
+            <h3>Key Configuration Parameters</h3>
+            <p>The model's accuracy depends on several configurable inputs available in the "Advanced Configuration" section:</p>
+            <ul>
+                <li><strong>Metadata & Audit Log Sizes:</strong> These determine the fundamental size of the data being ingested.</li>
+                <li><strong>Daily Change Rate (%):</strong> This directly impacts the daily ingest volume and, consequently, the size of the steady-state Hot/Warm tiers and the growth rate of the Iceberg archive.</li>
+                <li><strong>OpenSearch Replica Count:</strong> This directly impacts the compute and storage costs of the Hot Tier.</li>
+                <li><strong>Athena Query Scan (%):</strong> This allows you to customize the assumed data scan size for Athena queries, directly influencing the query costs in the Iceberg and Hybrid models.</li>
+            </ul>
+             <h3>Architecture Cost Breakdown</h3>
+            <ul>
+                <li><strong>OpenSearch Only:</strong> Cost includes EMR ingestion, OpenSearch Hot (compute + storage, including replicas), and Warm (compute + S3 storage) tiers, plus a fixed infrastructure cost. Retention is limited to the Hot + Warm periods.</li>
+                <li><strong>Iceberg + Athena:</strong> Cost includes EMR ingestion, the peak cost of S3 storage for the long-term archive, the projected cost of Athena queries, and a fixed infrastructure cost.</li>
+                <li><strong>Hybrid (Both):</strong> This is the most comprehensive and costly option, summing all components from both the OpenSearch Only and Iceberg + Athena architectures.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Cost Breakdown Modal -->
+    <div id="breakdown-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-breakdown-modal">&times;</span>
+            <h2 id="breakdown-title">Cost Breakdown</h2>
+            <div id="breakdown-content"></div>
+        </div>
+    </div>
+    
+    <!-- PDF Export Options Modal -->
+    <div id="export-options-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-export-options-modal">&times;</span>
+            <h2>Select Architectures for PDF Export</h2>
+            <div class="input-group">
+                <label><input type="checkbox" id="export-os" value="os" checked> OpenSearch Only</label>
+                <label><input type="checkbox" id="export-iceberg" value="iceberg" checked> Iceberg + Athena</label>
+                <label><input type="checkbox" id="export-hybrid" value="hybrid" checked> Hybrid (Both)</label>
+            </div>
+            <div class="button-group">
+                <button id="generate-pdf-btn" class="btn btn-primary">Generate PDF</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Element References ---
+            const calculateBtn = document.getElementById('calculate-btn');
+            const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
+            const viewAwsCostsBtn = document.getElementById('view-aws-costs-btn');
+            const infoBtn = document.getElementById('info-btn');
+            const advancedConfig = document.getElementById('advanced-config');
+            const resultsCard = document.getElementById('results-card');
+            const exportBtn = document.getElementById('export-btn');
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            const resultsTbody = document.getElementById('results-tbody');
+
+            // --- Modal Elements ---
+            const awsCostsModal = document.getElementById('aws-costs-modal');
+            const closeAwsModalBtn = document.getElementById('close-aws-modal');
+            const osDisclaimerModal = document.getElementById('os-disclaimer-modal');
+            const osDisclaimerBtn = document.getElementById('os-disclaimer-btn');
+            const closeOsDisclaimerModalBtn = document.getElementById('close-os-disclaimer-modal');
+            const icebergDisclaimerModal = document.getElementById('iceberg-disclaimer-modal');
+            const icebergDisclaimerBtn = document.getElementById('iceberg-disclaimer-btn');
+            const closeIcebergDisclaimerModalBtn = document.getElementById('close-iceberg-disclaimer-modal');
+            const mainInfoModal = document.getElementById('main-info-modal');
+            const closeMainInfoModalBtn = document.getElementById('close-main-info-modal');
+            const breakdownModal = document.getElementById('breakdown-modal');
+            const closeBreakdownModalBtn = document.getElementById('close-breakdown-modal');
+            const breakdownTitle = document.getElementById('breakdown-title');
+            const breakdownContent = document.getElementById('breakdown-content');
+            const exportOptionsModal = document.getElementById('export-options-modal');
+            const closeExportOptionsModalBtn = document.getElementById('close-export-options-modal');
+            const generatePdfBtn = document.getElementById('generate-pdf-btn');
+
+
+            // --- Global Variables ---
+            const awsCosts = {
+                emrServerless: { costPerBillionFiles: 13.88 },
+                ec2: { 'm6g.large': 0.128, 'm6g.xlarge': 0.256, 'm6g.2xlarge': 0.512 },
+                storage: { ebsGp3: 0.08, s3Standard: 0.023 },
+                athena: { perTBScanned: 5.00 }
+            };
+            let calculationDetails = {};
+            let inputValues = {};
+            
+            // --- Helper Functions ---
+            const parseFileCount = (input) => {
+                const value = input.trim().toLowerCase();
+                const num = parseFloat(value);
+                if (isNaN(num)) return 0;
+                if (value.endsWith('b')) return num * 1e9;
+                if (value.endsWith('m')) return num * 1e6;
+                return num;
+            };
+
+            const formatCurrency = (value, fractionDigits = 2) => {
+                const minDigits = fractionDigits > 2 ? fractionDigits : 2;
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: minDigits,
+                    maximumFractionDigits: minDigits
+                }).format(value);
+            };
+
+            const formatNumber = (value, fractionDigits = 2) => {
+                if (typeof value !== 'number' || isNaN(value)) {
+                    return 'N/A';
+                }
+                return value.toLocaleString('en-US', {
+                    minimumFractionDigits: fractionDigits,
+                    maximumFractionDigits: fractionDigits
+                });
+            };
+
+            // --- Core Calculation Logic ---
+            function runCalculations() {
+                // Step 1: Gather Inputs
+                 inputValues = {
+                    numberOfFiles: parseFileCount(document.getElementById('num-files').value),
+                    hotTierDays: parseFloat(document.getElementById('hot-retention').value),
+                    warmTierDays: parseFloat(document.getElementById('warm-retention').value),
+                    icebergRetentionDays: parseFloat(document.getElementById('iceberg-retention').value),
+                    metadataRecordSizeKB: parseFloat(document.getElementById('metadata-size').value),
+                    auditLogEventsPerChange: parseFloat(document.getElementById('audit-events').value),
+                    auditLogRecordSizeKB: parseFloat(document.getElementById('audit-size').value),
+                    dailyChangeRatePercent: parseFloat(document.getElementById('change-rate').value),
+                    replicaCount: parseFloat(document.getElementById('replica-count').value),
+                    athenaScanPercent: parseFloat(document.getElementById('athena-scan-percent').value),
+                };
+
+                // Step A: Data Volume Sizing
+                const totalMetadataSizeGB = (inputValues.numberOfFiles * inputValues.metadataRecordSizeKB) / (1024 * 1024);
+                const dailyChangedFiles = inputValues.numberOfFiles * (inputValues.dailyChangeRatePercent / 100);
+                const dailyMetadataIngestGB = (dailyChangedFiles * inputValues.metadataRecordSizeKB) / (1024 * 1024);
+                const dailyAuditLogIngestGB = (dailyChangedFiles * inputValues.auditLogEventsPerChange * inputValues.auditLogRecordSizeKB) / (1024 * 1024);
+                const totalDailyIngestGB = dailyMetadataIngestGB + dailyAuditLogIngestGB;
+                const maxHotDataGB = totalDailyIngestGB * inputValues.hotTierDays;
+                const maxWarmDataGB = totalDailyIngestGB * inputValues.warmTierDays;
+                const icebergTotalStorageGB = totalMetadataSizeGB + (totalDailyIngestGB * inputValues.icebergRetentionDays);
+                
+                calculationDetails.volume = {
+                    totalMetadataSizeGB, dailyChangedFiles, dailyMetadataIngestGB,
+                    dailyAuditLogIngestGB, totalDailyIngestGB, maxHotDataGB, maxWarmDataGB,
+                    icebergTotalStorageGB // Added for breakdown
+                };
+
+                // Step B: Dynamic OpenSearch Node Sizing
+                // Hot Tier
+                const hotStorageWithReplicasGB = maxHotDataGB * (1 + inputValues.replicaCount);
+                let hotInstanceType;
+                if (hotStorageWithReplicasGB < 200) hotInstanceType = 'm6g.large';
+                else if (hotStorageWithReplicasGB <= 1000) hotInstanceType = 'm6g.xlarge';
+                else hotInstanceType = 'm6g.2xlarge';
+                const hotNodeCount = Math.max(2, Math.ceil(hotStorageWithReplicasGB / 500));
+
+                // Warm Tier
+                const warmStorageGB = maxWarmDataGB;
+                let warmInstanceType;
+                if (warmStorageGB < 5000) warmInstanceType = 'm6g.large';
+                else warmInstanceType = 'm6g.xlarge';
+                const warmNodeCount = Math.max(2, Math.ceil(warmStorageGB / 4000));
+                
+                calculationDetails.sizing = {
+                    hotStorageWithReplicasGB, hotInstanceType, hotNodeCount,
+                    warmStorageGB, warmInstanceType, warmNodeCount
+                };
+
+                // Step C: Monthly Cost Component Calculation
+                const fixedInfrastructureCost = 400; // For ECS, EC2, RDS
+                // Ingestion
+                const emrCost = (inputValues.numberOfFiles / 1e9) * awsCosts.emrServerless.costPerBillionFiles * 30.44;
+                // OS Hot
+                const hotComputeCost = hotNodeCount * awsCosts.ec2[hotInstanceType] * 24 * 30.44;
+                const hotStorageCost = hotStorageWithReplicasGB * awsCosts.storage.ebsGp3;
+                // OS Warm
+                const warmComputeCost = warmNodeCount * awsCosts.ec2[warmInstanceType] * 24 * 30.44;
+                const warmStorageS3Cost = warmStorageGB * awsCosts.storage.s3Standard;
+                // Iceberg Archive (Using PEAK/TOTAL cost)
+                const icebergStorageCost = icebergTotalStorageGB * awsCosts.storage.s3Standard;
+                // Athena (Using PEAK/TOTAL cost)
+                const athenaQueryCost = (icebergTotalStorageGB / 1024) * (inputValues.athenaScanPercent / 100) * 200 * awsCosts.athena.perTBScanned;
+
+                calculationDetails.costs = {
+                     emrCost, hotComputeCost, hotStorageCost, warmComputeCost,
+                     warmStorageS3Cost, icebergStorageCost, athenaQueryCost,
+                     fixedInfrastructureCost
+                };
+
+                // Step D: Aggregate Costs for Each Architecture
+                const osMonthly = emrCost + hotComputeCost + hotStorageCost + warmComputeCost + warmStorageS3Cost + fixedInfrastructureCost;
+                const icebergMonthly = emrCost + icebergStorageCost + athenaQueryCost + fixedInfrastructureCost;
+                const hybridMonthly = osMonthly + icebergStorageCost + athenaQueryCost;
+
+                // Display Results
+                document.getElementById('os-monthly').textContent = formatCurrency(osMonthly);
+                document.getElementById('os-3year').textContent = formatCurrency(osMonthly * 36);
+                document.getElementById('iceberg-monthly').textContent = formatCurrency(icebergMonthly);
+                document.getElementById('iceberg-3year').textContent = formatCurrency(icebergMonthly * 36);
+                document.getElementById('hybrid-monthly').textContent = formatCurrency(hybridMonthly);
+                document.getElementById('hybrid-3year').textContent = formatCurrency(hybridMonthly * 36);
+
+                resultsCard.style.display = 'block';
+            }
+            
+            // --- Modal Display Logic ---
+            function showBreakdownModal(architecture) {
+                const { volume, sizing, costs } = calculationDetails;
+                let title = '';
+                let components = [];
+
+                const emrComponent = {
+                    name: 'EMR Serverless Ingestion',
+                    cost: costs.emrCost,
+                    formula: 'Cost for ingesting the initial batch of files, plus daily changes.',
+                    details: `(${formatNumber(inputValues.numberOfFiles / 1e9, 2)}B files / 1B) * ${formatCurrency(awsCosts.emrServerless.costPerBillionFiles)} * 30.44 days`
+                };
+                const hotComputeComponent = {
+                    name: `OpenSearch Hot Compute (${sizing.hotNodeCount} x ${sizing.hotInstanceType})`,
+                    cost: costs.hotComputeCost,
+                    formula: 'Node Count * Hourly Price * 24 * 30.44',
+                    details: `${sizing.hotNodeCount} nodes * ${formatCurrency(awsCosts.ec2[sizing.hotInstanceType], 3)}/hr * 24 hrs * 30.44 days`
+                };
+                const hotStorageComponent = {
+                    name: 'OpenSearch Hot Storage (EBS GP3)',
+                    cost: costs.hotStorageCost,
+                    formula: 'Hot Data GB (with replicas) * EBS Price/GB',
+                    details: `${formatNumber(sizing.hotStorageWithReplicasGB)} GB * ${formatCurrency(awsCosts.storage.ebsGp3)}/GB`
+                };
+                const warmComputeComponent = {
+                    name: `OpenSearch Warm Compute (${sizing.warmNodeCount} x ${sizing.warmInstanceType})`,
+                    cost: costs.warmComputeCost,
+                    formula: 'Node Count * Hourly Price * 24 * 30.44',
+                    details: `${sizing.warmNodeCount} nodes * ${formatCurrency(awsCosts.ec2[sizing.warmInstanceType], 3)}/hr * 24 hrs * 30.44 days`
+                };
+                const warmS3Component = {
+                    name: 'OpenSearch Warm Storage (S3)',
+                    cost: costs.warmStorageS3Cost,
+                    formula: 'Warm Data GB * S3 Price/GB',
+                    details: `${formatNumber(sizing.warmStorageGB)} GB * ${formatCurrency(awsCosts.storage.s3Standard)}/GB`
+                };
+                const icebergStorageComponent = {
+                    name: 'Iceberg Archive Storage (S3)',
+                    cost: costs.icebergStorageCost,
+                    formula: 'Peak Archive GB * S3 Price/GB',
+                    details: `${formatNumber(volume.icebergTotalStorageGB)} GB (peak) * ${formatCurrency(awsCosts.storage.s3Standard)}/GB`
+                };
+                const athenaComponent = {
+                    name: 'Athena Query Cost',
+                    cost: costs.athenaQueryCost,
+                    formula: '(Peak Archive TB * Scan %) * Queries/mo * Price/TB',
+                    details: `(${formatNumber(volume.icebergTotalStorageGB / 1024, 2)} TB * ${inputValues.athenaScanPercent}%) * 200 queries * ${formatCurrency(awsCosts.athena.perTBScanned)}/TB`
+                };
+                const fixedInfraComponent = {
+                    name: 'Fixed Infrastructure Cost',
+                    cost: costs.fixedInfrastructureCost,
+                    formula: 'Fixed monthly cost for essential shared services.',
+                    details: `Flat rate for ECS, management EC2, and RDS infrastructure: ${formatCurrency(400)}`
+                };
+
+                if (architecture === 'os') {
+                    title = 'OpenSearch Only Breakdown';
+                    components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, fixedInfraComponent];
+                } else if (architecture === 'iceberg') {
+                    title = 'Iceberg + Athena Breakdown';
+                    components = [emrComponent, icebergStorageComponent, athenaComponent, fixedInfraComponent];
+                } else {
+                    title = 'Hybrid Breakdown';
+                    components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, icebergStorageComponent, athenaComponent, fixedInfraComponent];
+                }
+                
+                breakdownTitle.textContent = title;
+                let totalCost = components.reduce((sum, c) => sum + c.cost, 0);
+                
+                let content = '<table class="breakdown-table">';
+                components.forEach(c => {
+                    content += `
+                        <tr class="component-row" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'table-row' ? 'none' : 'table-row'">
+                            <td>${c.name}</td>
+                            <td style="text-align:right;">${formatCurrency(c.cost)}</td>
+                        </tr>
+                        <tr class="detail-row" style="display:none;">
+                            <td colspan="2">
+                                <div class="calculation-detail"><strong>Formula:</strong> ${c.formula}<br><strong>Calculation:</strong> ${c.details}</div>
+                            </td>
+                        </tr>`;
+                });
+                content += `
+                    <tr>
+                        <th style="text-align:right;">Total Monthly Cost</th>
+                        <th style="text-align:right;">${formatCurrency(totalCost)}</th>
+                    </tr>
+                `;
+                content += '</table>';
+
+                breakdownContent.innerHTML = content;
+                breakdownModal.classList.add('show');
+            }
+
+            function showAwsCostsModal() {
+                const container = document.getElementById('aws-costs-container');
+                container.innerHTML = `
+                    <table class="aws-costs-table">
+                        <tr><th>Service</th><th>Item</th><th>Cost</th></tr>
+                        <tr><td>EMR Serverless</td><td>Per 1B Files Processed</td><td>${formatCurrency(awsCosts.emrServerless.costPerBillionFiles)}</td></tr>
+                        <tr><td rowspan="3">EC2 (m6g)</td><td>m6g.large</td><td>${formatCurrency(awsCosts.ec2['m6g.large'], 3)} / hour</td></tr>
+                        <tr><td>m6g.xlarge</td><td>${formatCurrency(awsCosts.ec2['m6g.xlarge'], 3)} / hour</td></tr>
+                        <tr><td>m6g.2xlarge</td><td>${formatCurrency(awsCosts.ec2['m6g.2xlarge'], 3)} / hour</td></tr>
+                        <tr><td rowspan="2">Storage</td><td>EBS gp3</td><td>${formatCurrency(awsCosts.storage.ebsGp3, 2)} / GB-month</td></tr>
+                        <tr><td>S3 Standard</td><td>${formatCurrency(awsCosts.storage.s3Standard, 3)} / GB-month</td></tr>
+                        <tr><td>Athena</td><td>Per TB Scanned</td><td>${formatCurrency(awsCosts.athena.perTBScanned)}</td></tr>
+                    </table>`;
+                awsCostsModal.classList.add('show');
+            }
+            
+            // --- Export Functions ---
+            function exportToCsv() {
+                if (Object.keys(calculationDetails).length === 0) {
+                    alert("Please run the calculation first before exporting.");
+                    return;
+                }
+
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Architecture,Monthly Cost,3-Year Total Cost\r\n";
+
+                const rows = [
+                    ["OpenSearch Only", document.getElementById('os-monthly').textContent, document.getElementById('os-3year').textContent],
+                    ["Iceberg + Athena", document.getElementById('iceberg-monthly').textContent, document.getElementById('iceberg-3year').textContent],
+                    ["Hybrid (Both)", document.getElementById('hybrid-monthly').textContent, document.getElementById('hybrid-3year').textContent]
+                ];
+
+                rows.forEach(function(rowArray) {
+                    let row = rowArray.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",");
+                    csvContent += row + "\r\n";
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "cloud_cost_analysis.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function generateAndExportPdf(selectedArchitectures) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                let yPos = 20;
+                const leftMargin = 15;
+                const lineSpacing = 7;
+                const lineSpacingSmall = 5;
+                const pageHeight = doc.internal.pageSize.height;
+                const bottomMargin = 20;
+
+                const checkPageBreak = (spaceNeeded = lineSpacing) => {
+                    if (yPos + spaceNeeded > pageHeight - bottomMargin) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                };
+
+                // Title
+                doc.setFontSize(18);
+                doc.text("Cloud Data Architecture Cost Analysis", leftMargin, yPos);
+                yPos += lineSpacing * 2;
+
+                // Configuration section
+                checkPageBreak();
+                doc.setFontSize(14);
+                doc.text("Configuration Used", leftMargin, yPos);
+                yPos += lineSpacing;
+                
+                doc.setFontSize(10);
+                let configText = [
+                    `Number of Files: ${document.getElementById('num-files').value}`,
+                    `Metadata Record Size: ${inputValues.metadataRecordSizeKB} KB`,
+                    `Audit Log Events per Change: ${inputValues.auditLogEventsPerChange}`,
+                    `Audit Log Record Size: ${inputValues.auditLogRecordSizeKB} KB`,
+                    `Daily Change Rate: ${inputValues.dailyChangeRatePercent}%`,
+                ];
+
+                if (selectedArchitectures.os || selectedArchitectures.hybrid) {
+                    configText.push(`Hot Tier Retention: ${inputValues.hotTierDays} Days`);
+                    configText.push(`Warm Tier Retention: ${inputValues.warmTierDays} Days`);
+                    configText.push(`OpenSearch Replica Count: ${inputValues.replicaCount}`);
+                }
+                if (selectedArchitectures.iceberg || selectedArchitectures.hybrid) {
+                    configText.push(`Iceberg Retention: ${inputValues.icebergRetentionDays} Days`);
+                    configText.push(`Athena Query Scan: ${inputValues.athenaScanPercent}%`);
+                }
+                const uniqueConfigText = [...new Set(configText)];
+                
+                uniqueConfigText.forEach(line => {
+                    checkPageBreak();
+                    doc.text(line, leftMargin, yPos);
+                    yPos += lineSpacing;
+                });
+
+                yPos += lineSpacing;
+                checkPageBreak();
+
+                // Results summary section
+                doc.setFontSize(14);
+                doc.text("Cost Analysis Summary", leftMargin, yPos);
+                yPos += lineSpacing;
+
+                doc.setFontSize(10);
+                const allResults = [
+                    { key: 'os', data: ['OpenSearch Only', document.getElementById('os-monthly').textContent, document.getElementById('os-3year').textContent] },
+                    { key: 'iceberg', data: ['Iceberg + Athena', document.getElementById('iceberg-monthly').textContent, document.getElementById('iceberg-3year').textContent] },
+                    { key: 'hybrid', data: ['Hybrid (Both)', document.getElementById('hybrid-monthly').textContent, document.getElementById('hybrid-3year').textContent] }
+                ];
+
+                const results = [
+                    ["Architecture", "Monthly Cost", "3-Year Total Cost"],
+                    ...allResults.filter(r => selectedArchitectures[r.key]).map(r => r.data)
+                ];
+
+                const colWidths = [80, 50, 50];
+                results.forEach((row, rowIndex) => {
+                    checkPageBreak();
+                    doc.setFont(undefined, rowIndex === 0 ? 'bold' : 'normal');
+                    row.forEach((cell, cellIndex) => {
+                        let xPos = leftMargin + colWidths.slice(0, cellIndex).reduce((a, b) => a + b, 0);
+                        doc.text(cell, xPos, yPos);
+                    });
+                    yPos += lineSpacing;
+                    if (rowIndex === 0) {
+                        doc.setDrawColor(180);
+                        doc.line(leftMargin, yPos - (lineSpacing / 1.5), leftMargin + colWidths.reduce((a, b) => a + b, 0) - 40, yPos - (lineSpacing / 1.5));
+                    }
+                });
+
+                // --- DETAILED BREAKDOWN SECTION ---
+                yPos += lineSpacing * 2;
+                checkPageBreak();
+
+                if (results.length > 1) {
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text("Detailed Cost Breakdowns", leftMargin, yPos);
+                    yPos += lineSpacing * 1.5;
+                }
+
+                const drawBreakdownTable = (architecture) => {
+                    checkPageBreak();
+                    const { costs, sizing } = calculationDetails;
+                    let title = '';
+                    let components = [];
+
+                    const emrComponent = { name: 'EMR Serverless Ingestion', cost: costs.emrCost };
+                    const hotComputeComponent = { name: `OS Hot Compute (${sizing.hotNodeCount} x ${sizing.hotInstanceType})`, cost: costs.hotComputeCost };
+                    const hotStorageComponent = { name: 'OS Hot Storage (EBS GP3)', cost: costs.hotStorageCost };
+                    const warmComputeComponent = { name: `OS Warm Compute (${sizing.warmNodeCount} x ${sizing.warmInstanceType})`, cost: costs.warmComputeCost };
+                    const warmS3Component = { name: 'OS Warm Storage (S3)', cost: costs.warmStorageS3Cost };
+                    const icebergStorageComponent = { name: 'Iceberg Archive Storage (S3)', cost: costs.icebergStorageCost };
+                    const athenaComponent = { name: 'Athena Query Cost', cost: costs.athenaQueryCost };
+                    const fixedInfraComponent = { name: 'Fixed Infrastructure Cost', cost: costs.fixedInfrastructureCost };
+
+                    if (architecture === 'os') {
+                        title = 'OpenSearch Only Breakdown';
+                        components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, fixedInfraComponent];
+                    } else if (architecture === 'iceberg') {
+                        title = 'Iceberg + Athena Breakdown';
+                        components = [emrComponent, icebergStorageComponent, athenaComponent, fixedInfraComponent];
+                    } else { // hybrid
+                        title = 'Hybrid (Both) Breakdown';
+                        components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, icebergStorageComponent, athenaComponent, fixedInfraComponent];
+                    }
+
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(title, leftMargin, yPos);
+                    yPos += lineSpacing * 1.5;
+
+                    const breakdownColWidths = [130, 40];
+                    const tableRightEdge = leftMargin + breakdownColWidths.reduce((a, b) => a + b, 0);
+                    
+                    doc.setFontSize(10);
+                    doc.text("Component", leftMargin, yPos);
+                    doc.text("Monthly Cost", tableRightEdge, yPos, { align: 'right' });
+                    yPos += lineSpacing * 0.5;
+                    doc.setDrawColor(180);
+                    doc.line(leftMargin, yPos, tableRightEdge, yPos);
+                    yPos += lineSpacing;
+
+                    doc.setFont(undefined, 'normal');
+                    components.forEach(c => {
+                        checkPageBreak();
+                        doc.text(c.name, leftMargin, yPos);
+                        doc.text(formatCurrency(c.cost), tableRightEdge, yPos, { align: 'right' });
+                        yPos += lineSpacing;
+                    });
+                    
+                    const totalCost = components.reduce((sum, c) => sum + c.cost, 0);
+                    doc.setFont(undefined, 'bold');
+                    yPos += 2;
+                    doc.line(leftMargin, yPos, tableRightEdge, yPos);
+                    yPos += lineSpacing;
+                    
+                    checkPageBreak();
+                    doc.text("Total Monthly Cost", leftMargin, yPos);
+                    doc.text(formatCurrency(totalCost), tableRightEdge, yPos, { align: 'right' });
+                    yPos += lineSpacing * 2.5;
+                };
+                
+                if (selectedArchitectures.os) drawBreakdownTable('os');
+                if (selectedArchitectures.iceberg) drawBreakdownTable('iceberg');
+                if (selectedArchitectures.hybrid) drawBreakdownTable('hybrid');
+
+
+                // Disclaimers
+                if ((selectedArchitectures.os || selectedArchitectures.iceberg || selectedArchitectures.hybrid) && yPos < pageHeight - 60 ){
+                     checkPageBreak();
+                     yPos += lineSpacing;
+                     doc.setFontSize(12);
+                     doc.setFont(undefined, 'bold');
+                     doc.text("Notes & Disclaimers", leftMargin, yPos);
+                     yPos += lineSpacing;
+                }
+
+                if(selectedArchitectures.os) {
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text("OpenSearch Only:", leftMargin, yPos);
+                    yPos += 5;
+                    doc.setFont(undefined, 'normal');
+                    let osDisclaimer = doc.splitTextToSize('The "OpenSearch Only" architecture retains data only for the duration specified in the Hot and Warm tier retention periods. The 3-year cost reflects running this architecture continuously, but it does not imply 3 years of data retention.', 180);
+                    checkPageBreak();
+                    doc.text(osDisclaimer, leftMargin, yPos);
+                    yPos += osDisclaimer.length * 4 + lineSpacing;
+                }
+                
+                if(selectedArchitectures.iceberg || selectedArchitectures.hybrid) {
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text("Iceberg + Athena:", leftMargin, yPos);
+                    yPos += 5;
+                    doc.setFont(undefined, 'normal');
+                    let icebergDisclaimer = doc.splitTextToSize('This model calculates cost based on the total storage at the end of the retention period to show the "peak" or "steady-state" monthly cost. It also assumes up to 200 complex queries in Athena per month.', 180);
+                    checkPageBreak();
+                    doc.text(icebergDisclaimer, leftMargin, yPos);
+                    yPos += icebergDisclaimer.length * 4 + lineSpacing;
+                }
+                
+                // --- APPENDIX: DETAILED FORMULAS ---
+                checkPageBreak(40); // Need space for title
+                if (yPos > pageHeight - 80) {
+                     doc.addPage();
+                     yPos = 20;
+                }
+
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text("Appendix: Detailed Cost Formulas", leftMargin, yPos);
+                yPos += lineSpacing * 1.5;
+                
+                const appendixFormulas = {
+                    common: [
+                        {
+                            title: 'Daily Changed Files',
+                            lines: ['= Number of Files * (Daily Change Rate / 100)']
+                        },
+                        {
+                            title: 'Total Daily Ingest (GB)',
+                            lines: [
+                                '= Daily Metadata Ingest GB + Daily Audit Log Ingest GB',
+                                '  - Daily Metadata Ingest GB = (Daily Changed Files * Metadata Record Size KB) / 1,048,576',
+                                '  - Daily Audit Log Ingest GB = (Daily Changed Files * Audit Events * Audit Log Record Size KB) / 1,048,576'
+                            ]
+                        },
+                        {
+                            title: 'EMR Serverless Ingestion Cost',
+                            lines: ['= (Number of Files / 1,000,000,000) * EMR Cost Per Billion * 30.44']
+                        },
+                        {
+                            title: 'Fixed Infrastructure Cost',
+                            lines: ['= A fixed monthly charge for shared resources (ECS, RDS, etc.)']
+                        }
+                    ],
+                    os: [
+                        {
+                            title: 'OpenSearch Hot Tier Storage (GB, with replicas)',
+                            lines: ['= (Total Daily Ingest GB * Hot Tier Retention Days) * (1 + Replica Count)']
+                        },
+                        {
+                            title: 'OpenSearch Hot Tier Storage Cost (EBS GP3)',
+                            lines: ['= Hot Tier Storage GB * EBS GP3 Price Per GB']
+                        },
+                         {
+                            title: 'OpenSearch Hot Tier Compute Cost',
+                            lines: [
+                                '= Hot Node Count * EC2 Instance Hourly Price * 24 * 30.44',
+                                '  - Instance Type is dynamically selected based on Hot Tier Storage GB.',
+                                '  - Hot Node Count = MAX(2, CEILING(Hot Tier Storage GB / 500 GB per Node))'
+                            ]
+                        },
+                        {
+                            title: 'OpenSearch Warm Tier Storage (GB)',
+                            lines: ['= Total Daily Ingest GB * Warm Tier Retention Days']
+                        },
+                         {
+                            title: 'OpenSearch Warm Tier Storage Cost (S3)',
+                            lines: ['= Warm Tier Storage GB * S3 Standard Price Per GB']
+                        },
+                        {
+                            title: 'OpenSearch Warm Tier Compute Cost',
+                            lines: [
+                                '= Warm Node Count * EC2 Instance Hourly Price * 24 * 30.44',
+                                '  - Instance Type is dynamically selected based on Warm Tier Storage GB.',
+                                '  - Warm Node Count = MAX(2, CEILING(Warm Tier Storage GB / 4000 GB per Node))'
+                            ]
+                        }
+                    ],
+                    iceberg: [
+                        {
+                            title: 'Iceberg Peak Storage (GB)',
+                            lines: [
+                                '= Initial Metadata Size GB + Total Added Data GB',
+                                '  - Initial Metadata Size GB = (Number of Files * Metadata Record Size KB) / 1,048,576',
+                                '  - Total Added Data GB = Total Daily Ingest GB * Iceberg Retention Days'
+                            ]
+                        },
+                        {
+                            title: 'Iceberg Peak Storage Cost (S3)',
+                            lines: ['= Iceberg Peak Storage GB * S3 Standard Price Per GB']
+                        },
+                        {
+                            title: 'Athena Query Cost',
+                            lines: [
+                                '= (Iceberg Peak Storage GB / 1024) * (Athena Scan % / 100) * 200 Queries * Athena Price Per TB',
+                                '  - Assumes 200 complex queries per month.'
+                            ]
+                        },
+                    ]
+                };
+
+                const writeAppendixSection = (title, formulas) => {
+                    checkPageBreak(20);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(title, leftMargin, yPos);
+                    yPos += lineSpacing * 1.5;
+
+                    doc.setFontSize(9);
+                    formulas.forEach(formula => {
+                        checkPageBreak(formula.lines.length * lineSpacingSmall + lineSpacingSmall);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(formula.title, leftMargin + 3, yPos);
+                        yPos += lineSpacingSmall;
+                        
+                        doc.setFont(undefined, 'normal');
+                        formula.lines.forEach(line => {
+                            checkPageBreak();
+                            doc.text(line, leftMargin + 6, yPos);
+                            yPos += lineSpacingSmall;
+                        });
+                        yPos += lineSpacingSmall; // Extra space between formulas
+                    });
+                };
+
+                if (selectedArchitectures.os) {
+                    let formulas = [...appendixFormulas.common, ...appendixFormulas.os];
+                    writeAppendixSection("OpenSearch Only Formulas", formulas);
+                }
+                if (selectedArchitectures.iceberg) {
+                    let formulas = [...appendixFormulas.common, ...appendixFormulas.iceberg];
+                     writeAppendixSection("Iceberg + Athena Formulas", formulas);
+                }
+                if (selectedArchitectures.hybrid) {
+                    let formulas = [...appendixFormulas.common, ...appendixFormulas.os, ...appendixFormulas.iceberg];
+                    const uniqueFormulas = formulas.filter((v,i,a)=>a.findIndex(t=>(t.title === v.title))===i) // remove duplicates
+                    writeAppendixSection("Hybrid (Both) Formulas", uniqueFormulas);
+                }
+
+
+                // Save PDF
+                doc.save('cloud_cost_analysis_custom.pdf');
+            }
+            
+            // --- Event Listener Attachments ---
+            toggleAdvancedBtn.addEventListener('click', () => {
+                advancedConfig.classList.toggle('show');
+            });
+            
+            calculateBtn.addEventListener('click', runCalculations);
+
+            viewAwsCostsBtn.addEventListener('click', showAwsCostsModal);
+            closeAwsModalBtn.addEventListener('click', () => awsCostsModal.classList.remove('show'));
+
+            infoBtn.addEventListener('click', () => mainInfoModal.classList.add('show'));
+            closeMainInfoModalBtn.addEventListener('click', () => mainInfoModal.classList.remove('show'));
+            
+            osDisclaimerBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent row click event
+                osDisclaimerModal.classList.add('show');
+            });
+            closeOsDisclaimerModalBtn.addEventListener('click', () => osDisclaimerModal.classList.remove('show'));
+
+            icebergDisclaimerBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent row click event
+                icebergDisclaimerModal.classList.add('show');
+            });
+            closeIcebergDisclaimerModalBtn.addEventListener('click', () => icebergDisclaimerModal.classList.remove('show'));
+            
+            closeBreakdownModalBtn.addEventListener('click', () => breakdownModal.classList.remove('show'));
+
+            resultsTbody.addEventListener('click', (event) => {
+                const row = event.target.closest('tr');
+                if (row && row.dataset.architecture) {
+                    showBreakdownModal(row.dataset.architecture);
+                }
+            });
+
+            exportBtn.addEventListener('click', exportToCsv);
+
+            exportPdfBtn.addEventListener('click', () => {
+                 if (Object.keys(calculationDetails).length === 0) {
+                    alert("Please run the calculation first before exporting.");
+                    return;
+                }
+                exportOptionsModal.classList.add('show');
+            });
+            closeExportOptionsModalBtn.addEventListener('click', () => exportOptionsModal.classList.remove('show'));
+
+            generatePdfBtn.addEventListener('click', () => {
+                const selectedArchitectures = {
+                    os: document.getElementById('export-os').checked,
+                    iceberg: document.getElementById('export-iceberg').checked,
+                    hybrid: document.getElementById('export-hybrid').checked
+                };
+                if (!selectedArchitectures.os && !selectedArchitectures.iceberg && !selectedArchitectures.hybrid) {
+                    alert("Please select at least one architecture to export.");
+                    return;
+                }
+                exportOptionsModal.classList.remove('show');
+                generateAndExportPdf(selectedArchitectures);
+            });
+
+
+            // Close modals on outside click
+            window.addEventListener('click', (event) => {
+                if (event.target == awsCostsModal) awsCostsModal.classList.remove('show');
+                if (event.target == osDisclaimerModal) osDisclaimerModal.classList.remove('show');
+                if (event.target == icebergDisclaimerModal) icebergDisclaimerModal.classList.remove('show');
+                if (event.target == mainInfoModal) mainInfoModal.classList.remove('show');
+                if (event.target == breakdownModal) breakdownModal.classList.remove('show');
+                if (event.target == exportOptionsModal) exportOptionsModal.classList.remove('show');
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
+
