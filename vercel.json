@@ -30,6 +30,14 @@
     {
       "source": "/portal-modernization-presentation/",
       "destination": "/portal-modernization-presentation/index.html"
+    },
+    {
+      "source": "/extreme-cursor",
+      "destination": "/extreme-cursor/index.html"
+    },
+    {
+      "source": "/extreme-cursor/",
+      "destination": "/extreme-cursor/index.html"
     }
   ],
   "headers": [

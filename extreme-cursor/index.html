@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extreme Cursor: Engineering at the Speed of Thought</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a192f;
+            color: #ccd6f6;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            touch-action: none;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 1;
+            padding: 2rem 4rem;
+        }
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            z-index: 2;
+        }
+        #bottomNav {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 10;
+            background-color: rgba(10, 25, 47, 0.85);
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            border: 1px solid #1e293b;
+            backdrop-filter: blur(5px);
+        }
+        .nav-button, .page-btn {
+            background-color: transparent;
+            color: #ccd6f6;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-family: 'Fira Code', monospace;
+        }
+        .nav-button:hover, .page-btn:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+            color: #64ffda;
+            border-color: rgba(100, 255, 218, 0.3);
+        }
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        #slideCounter {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            min-width: 60px;
+            text-align: center;
+            color: #8892b0;
+        }
+        #fullscreenBtn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background-color: rgba(10, 25, 47, 0.5);
+            color: #64ffda;
+            border: 1px solid #64ffda;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+        }
+        #fullscreenBtn:hover {
+            background-color: rgba(100, 255, 218, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+        }
+        .highlight-text { color: #64ffda; }
+        .card {
+            background-color: #112240;
+            border-radius: 8px;
+            padding: 2rem;
+            transition: transform 0.3s ease;
+            border: 1px solid transparent;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #64ffda;
+        }
+        .code-snippet {
+            font-family: 'Fira Code', monospace;
+            background-color: #020c1b;
+            color: #a8b2d1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .prompt-box {
+            background-color: #1e293b;
+            border-left: 4px solid #64ffda;
+            font-family: 'Fira Code', monospace;
+            color: #cbd5e1;
+        }
+        ul.feature-list li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        ul.feature-list li svg {
+            color: #64ffda;
+            margin-right: 1rem;
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(100, 255, 218, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(100, 255, 218, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(100, 255, 218, 0); }
+        }
+        .challenge-btn {
+            animation: pulse-border 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <div class="inline-block px-3 py-1 mb-6 border border-teal-400 rounded-full text-teal-400 text-sm font-mono bg-teal-400/10">
+            ENGINEERING EXCELLENCE
+        </div>
+        <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
+            Engineering at the<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">Speed of Thought</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto font-light">
+            The "Extreme Cursor" Guide
+        </p>
+    </div>
+
+    <!-- Slide 2: The Real Talk -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-12 max-w-6xl w-full">
+            <div class="flex-1 text-left space-y-6">
+                <h2 class="text-4xl font-bold text-white">AI is <span class="highlight-text">Not</span> a Replacement</h2>
+                <p class="text-xl text-slate-300 leading-relaxed">
+                    It is here to replace the <span class="text-white font-semibold">drudgery</span>. We are shifting from being "syntax writers" to "logic curators".
+                </p>
+                <div class="bg-blue-900/20 border border-blue-500/30 p-6 rounded-lg mt-8">
+                    <p class="text-lg text-blue-200 italic">
+                        "It is only a threat if you ignore it. If you master Cursor, you become a 10x engineer—not because you type faster, but because you think clearer."
+                    </p>
+                </div>
+            </div>
+            <div class="flex-1 flex justify-center">
+                <div class="relative w-80 h-80">
+                    <div class="absolute inset-0 bg-teal-500/20 rounded-full animate-pulse blur-3xl"></div>
+                    <div class="relative z-10 bg-[#112240] border border-teal-500/50 p-8 rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <div class="space-y-4 font-mono text-sm">
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            </div>
+                            <div class="text-slate-400">// Old Way</div>
+                            <div class="text-red-400 line-through">public void boilerplate() { ... }</div>
+                            <div class="h-4"></div>
+                            <div class="text-teal-400">// New Way</div>
+                            <div class="text-white">Architecture.design();</div>
+                            <div class="text-white">Logic.curate();</div>
+                            <div class="text-teal-500 cursor-blink">|</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Challenge -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-4xl font-bold text-white mb-12">The "Extreme Cursor" Challenge</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
+            <div class="card flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 text-red-400 text-2xl">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4">No Traditional IDEs</h3>
+                <p class="text-slate-400 text-sm">Close IntelliJ. Close VS Code Standard. Close WebStorm. Remove the safety net.</p>
+            </div>
+            <div class="card flex flex-col items-center text-center border-teal-500/50">
+                <div class="w-16 h-16 bg-teal-500/10 rounded-full flex items-center justify-center mb-6 text-teal-400 text-2xl">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4">Cursor Only</h3>
+                <p class="text-slate-400 text-sm">All editing, navigation, and logic creation happens inside the Cursor interface.</p>
+            </div>
+            <div class="card flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 text-blue-400 text-2xl">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4">CLI for Heavy Lifting</h3>
+                <p class="text-slate-400 text-sm">No GUI buttons for build or git. Use <span class="code-snippet">gradle</span>, <span class="code-snippet">mvn</span>, and <span class="code-snippet">git</span> in the terminal.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Setup & Configuration -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-8 w-full max-w-6xl text-left">Setup & Configuration</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl w-full">
+            <!-- Col 1: Models -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold highlight-text flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    Choose Your Poison
+                </h3>
+                <div class="bg-[#112240] p-4 rounded-lg space-y-3 h-full">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-white font-semibold text-sm">Auto (cpp)</span>
+                        <span class="text-red-400 text-[10px] font-mono border border-red-500/50 px-1 py-0.5 rounded">DISABLE</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-white font-semibold text-sm">Composer</span>
+                        <span class="text-yellow-400 text-[10px] font-mono border border-yellow-500/50 px-1 py-0.5 rounded">TRIVIAL</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-white font-semibold text-sm">Sonnet 4.5 / Gemini 3.0</span>
+                        <span class="text-teal-400 text-[10px] font-mono self-start border border-teal-500/50 px-1 py-0.5 rounded">MANUAL SELECT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 2: Parent Folder -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold highlight-text flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    The "Parent Folder"
+                </h3>
+                <div class="bg-[#112240] p-4 rounded-lg h-full flex flex-col">
+                    <p class="text-xs text-slate-400 mb-3">Cursor is bound by root folder. Force full visibility.</p>
+                    <div class="font-mono text-[10px] bg-black p-3 rounded text-green-400 border border-slate-700 flex-grow">
+                        ~/Work/Super-Parent/<br>
+                        ├── backend-repo/<br>
+                        ├── gui-repo/<br>
+                        └── infra-repo/
+                    </div>
+                    <p class="text-xs text-white mt-3 text-center font-semibold">Open <span class="highlight-text">Super-Parent</span></p>
+                </div>
+            </div>
+
+            <!-- Col 3: Rules (NEW) -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold highlight-text flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    .cursorrules (The Law)
+                </h3>
+                <div class="bg-[#112240] p-4 rounded-lg h-full text-xs space-y-3">
+                    <div class="border-l-2 border-purple-500 pl-2">
+                        <strong class="text-purple-300 block mb-1">Identity</strong>
+                        <p class="text-slate-400">"You are a Principal Engineer. Value readability over cleverness."</p>
+                    </div>
+                    <div class="border-l-2 border-blue-500 pl-2">
+                        <strong class="text-blue-300 block mb-1">Tech Stack</strong>
+                        <p class="text-slate-400">"Next.js 15, React 19. No deprecated APIs."</p>
+                    </div>
+                    <div class="border-l-2 border-green-500 pl-2">
+                        <strong class="text-green-300 block mb-1">Behavior</strong>
+                        <p class="text-slate-400">"Always analyze structure first. Never delete comments. DRY."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: The Art of Prompting -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-6 w-full max-w-5xl text-left">The Art of Prompting</h2>
+        <div class="flex gap-8 w-full max-w-6xl items-start">
+            <div class="flex-1 space-y-8">
+                <p class="text-lg text-slate-300">
+                    Don't be lazy. You are the <strong class="text-white">Technical Product Manager</strong> for the AI.
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold">1</div>
+                        <div class="text-white">Context (Files/Repos)</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold">2</div>
+                        <div class="text-white">Instruction (Analyze/Refactor)</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold">3</div>
+                        <div class="text-white">Constraint ("IMPORTANT")</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400 font-bold">4</div>
+                        <div class="text-white">Output (Artifacts)</div>
+                    </div>
+                </div>
+                <div class="p-4 border border-red-500/30 bg-red-500/10 rounded text-red-200 text-sm">
+                    <strong>The Restart Rule:</strong> If the agent hallucinates, <span class="underline">do not argue</span>. Close the chat. Revise the prompt. Start fresh.
+                </div>
+            </div>
+            <div class="flex-1">
+                <div class="prompt-box p-6 rounded-lg text-xs md:text-sm shadow-2xl">
+                    <div class="text-slate-500 mb-2"># Example Prompt</div>
+                    <p class="mb-2"><span class="text-purple-400">Please analyze:</span><br>
+                    - Insight-management-cluster<br>
+                    - platform-modules-catalog</p>
+                    
+                    <p class="mb-2"><span class="text-yellow-400">IMPORTANT:</span><br>
+                    Analyze every .md file. This is the main target.</p>
+                    
+                    <p class="mb-2"><span class="text-teal-400">I want to:</span><br>
+                    1. Plan the new folder structure<br>
+                    2. Identify sections to copy<br>
+                    3. Fix discrepancies</p>
+                    
+                    <p><span class="text-blue-400">Future Goal:</span><br>
+                    Publish to Confluence pipeline.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Documentation as Memory -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl md:text-5xl font-bold text-white mb-8">Documentation as <span class="highlight-text">Memory</span></h2>
+        <div class="flex flex-col items-center gap-8 max-w-4xl">
+            <p class="text-xl text-slate-400">LLMs have "Lossy Compression". They forget details as the chat gets long.</p>
+            
+            <div class="flex items-center gap-8 w-full justify-center my-8">
+                <div class="text-center opacity-50">
+                    <svg class="w-16 h-16 mx-auto text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    <p>Chat (Ephemeral)</p>
+                </div>
+                <div class="text-teal-500 text-2xl font-bold">&rarr;</div>
+                <div class="text-center p-6 bg-[#112240] border border-teal-500 rounded-lg shadow-[0_0_30px_rgba(100,255,218,0.1)]">
+                    <svg class="w-16 h-16 mx-auto text-teal-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p class="text-white font-bold">.md Files</p>
+                    <p class="text-xs text-slate-400">work-log.md | decisions.md</p>
+                </div>
+            </div>
+            
+            <p class="text-lg text-slate-300 max-w-2xl">
+                "If the context fails, point the new chat to <span class="code-snippet">work-log.md</span> to restore state."
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 7: Work Modes -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-12">Work Modes</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full">
+            <!-- ASK -->
+            <div class="card border-t-4 border-t-blue-500">
+                <h3 class="text-2xl font-bold text-white mb-4">ASK</h3>
+                <div class="text-blue-400 text-sm mb-4 font-mono">Standard Chat</div>
+                <p class="text-slate-400 mb-4">Use for queries, explanations, and exploring the codebase.</p>
+                <div class="bg-blue-500/10 text-blue-300 text-xs p-2 rounded text-center">Code remains safe</div>
+            </div>
+            
+            <!-- PLAN -->
+            <div class="card border-t-4 border-t-yellow-500 transform scale-105 z-10 shadow-2xl bg-[#172a46]">
+                <h3 class="text-2xl font-bold text-white mb-4">PLAN</h3>
+                <div class="text-yellow-400 text-sm mb-4 font-mono">Architect Mode</div>
+                <p class="text-slate-400 mb-4">Prompt AI to create a Markdown plan <em>before</em> coding.</p>
+                <ul class="text-sm text-slate-300 list-disc list-inside space-y-2">
+                    <li>Create ToDo lists</li>
+                    <li>Iterate on logic</li>
+                    <li><strong>Review manually</strong></li>
+                </ul>
+            </div>
+            
+            <!-- AGENT -->
+            <div class="card border-t-4 border-t-red-500">
+                <h3 class="text-2xl font-bold text-white mb-4">AGENT</h3>
+                <div class="text-red-400 text-sm mb-4 font-mono">The Builder</div>
+                <p class="text-slate-400 mb-4">Executes changes across multiple files.</p>
+                <div class="p-3 border border-red-500/30 bg-red-500/5 rounded text-xs text-red-200">
+                    <strong>Warning:</strong> Batch small changes. Review > Apply > Commit. Don't let it go wild.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Scenario A - Bug Fix -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-4 text-center">Scenario A: The Bug Fix</h2>
+        <p class="text-slate-400 mb-10 text-center">Goal: Fix NullPointerException in <span class="code-snippet">UserAuthentication</span></p>
+        
+        <div class="flex flex-col gap-6 max-w-5xl w-full">
+            <!-- Phase 1 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-slate-500">Phase 1</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-slate-600 flex items-center justify-center text-white font-bold">📝</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-slate-500">
+                    <h4 class="text-white font-bold">Draft (Notepad)</h4>
+                    <p class="text-sm text-slate-400">Draft prompt outside Cursor. Paste Stack Trace. Ask for analysis only.</p>
+                </div>
+            </div>
+            
+            <!-- Phase 2 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-blue-500">Phase 2</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-blue-500 flex items-center justify-center text-white font-bold">🔍</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-blue-500">
+                    <h4 class="text-white font-bold">Ask & Analyze</h4>
+                    <p class="text-sm text-slate-400">Paste prompt. AI explains race condition. No code changes yet.</p>
+                </div>
+            </div>
+            
+            <!-- Phase 3 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-green-500">Phase 3</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-green-500 flex items-center justify-center text-white font-bold">✅</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-green-500">
+                    <h4 class="text-white font-bold">Plan & Execute</h4>
+                    <p class="text-sm text-slate-400">Composer Mode: "Create failing test in <span class="code-snippet">AuthControllerTest</span>. Implement synchronized fix. Verify."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Scenario B - New Feature -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-4 text-center">Scenario B: New Feature</h2>
+        <p class="text-slate-400 mb-10 text-center">Goal: Add "Dark Mode" Toggle</p>
+        
+        <div class="flex flex-col gap-6 max-w-5xl w-full">
+            <!-- Phase 1 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-slate-500">Phase 1</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-slate-600 flex items-center justify-center text-white font-bold">🏗️</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-slate-500">
+                    <h4 class="text-white font-bold">The Architect's Draft</h4>
+                    <p class="text-sm text-slate-400">Draft requirements in Notepad. List Schema, API, and UI components to touch.</p>
+                </div>
+            </div>
+            
+            <!-- Phase 2 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-yellow-500">Phase 2</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-yellow-500 flex items-center justify-center text-white font-bold">📋</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-yellow-500">
+                    <h4 class="text-white font-bold">The Spec (Plan Mode)</h4>
+                    <p class="text-sm text-slate-400">Prompt AI to write <span class="code-snippet">feature-dark-mode.md</span>. <strong class="text-white">Review manually.</strong> If the plan is wrong, code is wrong.</p>
+                </div>
+            </div>
+            
+            <!-- Phase 3 -->
+            <div class="flex items-center gap-6">
+                <div class="w-24 text-right font-bold text-teal-500">Phase 3</div>
+                <div class="w-12 h-12 rounded-full bg-[#112240] border border-teal-500 flex items-center justify-center text-white font-bold">🤖</div>
+                <div class="flex-1 bg-[#112240] p-4 rounded-lg border-l-4 border-teal-500">
+                    <h4 class="text-white font-bold">Agent Execution</h4>
+                    <p class="text-sm text-slate-400">"Read markdown. Execute Backend steps." -> Verify -> Apply. <br> "Execute Frontend steps." -> Verify -> Apply.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Costs & Limits -->
+    <div class="slide">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-3xl font-bold text-white mb-12">Cost & Limits</h2>
+        <div class="flex gap-8 max-w-5xl w-full">
+            <div class="flex-1 card bg-[#112240] border-slate-700">
+                <h3 class="text-xl font-bold text-white mb-6 text-center">Speed & Quota</h3>
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center p-3 bg-green-500/10 rounded border border-green-500/20">
+                        <span class="text-white font-mono">Composer / Auto</span>
+                        <span class="text-green-400 font-bold">UNLIMITED</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-purple-500/10 rounded border border-purple-500/20">
+                        <span class="text-white font-mono">Premium (Sonnet/Gemini)</span>
+                        <span class="text-purple-400 font-bold">500 / month</span>
+                    </div>
+                    <div class="p-4 bg-slate-800 rounded text-sm text-slate-300">
+                        <strong>The "Slow" Queue:</strong><br>
+                        After 500, you aren't cut off. You just face a time delay.
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 card bg-[#112240] border-teal-500/50 flex flex-col justify-center text-center">
+                <h3 class="text-2xl font-bold text-white mb-4">The Strategy</h3>
+                <p class="text-lg text-slate-300 mb-6">
+                    Don't waste premium prompts on<br> <span class="italic text-slate-500">"How do I center a div?"</span>
+                </p>
+                <div class="p-4 bg-teal-500/10 border border-teal-500/30 rounded-lg">
+                    <p class="text-teal-300 font-bold">
+                        Save the big guns for Architecture & Refactoring.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: Summary -->
+    <div class="slide text-center">
+        <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
+        <h2 class="text-4xl font-bold text-white mb-10">Mission Brief</h2>
+        <ul class="text-left text-xl md:text-2xl space-y-6 max-w-3xl mx-auto feature-list">
+            <li class="hover:translate-x-2 transition-transform">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-slate-300">Stop coding like a dinosaur. <strong class="text-white">Evolve.</strong></span>
+            </li>
+            <li class="hover:translate-x-2 transition-transform">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span class="text-slate-300">Don't debate the bot. <strong class="text-red-400">Kill it. Restart.</strong></span>
+            </li>
+            <li class="hover:translate-x-2 transition-transform">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <span class="text-slate-300">Markdown is your <strong class="text-yellow-400">Save Point.</strong></span>
+            </li>
+            <li class="hover:translate-x-2 transition-transform">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-slate-300"><span class="code-snippet text-lg">CLI</span> is the only truth.</span>
+            </li>
+        </ul>
+        <div class="mt-16 relative group cursor-pointer">
+            <div class="absolute -inset-1 bg-gradient-to-r from-teal-400 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+            <div class="relative px-8 py-6 bg-[#112240] ring-1 ring-gray-900/5 rounded-lg leading-none flex items-center justify-center space-x-6 challenge-btn">
+                <div class="text-center">
+                    <p class="text-teal-400 font-bold text-sm tracking-wider uppercase mb-2">The Question Is:</p>
+                    <p class="text-2xl md:text-3xl font-black text-white">Are you up for the <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">Extreme Cursor Challenge?</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div id="bottomNav">
+        <button id="prevBtn" class="nav-button" title="Previous Slide">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <div id="slideCounter">1 / 11</div>
+        <button id="nextBtn" class="nav-button" title="Next Slide">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
+    
+    <button id="fullscreenBtn" title="Toggle Fullscreen">
+        <svg id="fullscreenIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1v4m0 0h-4m4-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v-4m0 0h-4m4 4l-5-5"></path></svg>
+    </button>
+
+    <script>
+        // --- Canvas Animation (Starfield) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const numParticles = 70;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2;
+                this.color = `rgba(100, 255, 218, ${Math.random() * 0.3})`;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            // Draw connections
+            particles.forEach((a, index) => {
+                particles.slice(index + 1).forEach(b => {
+                    const dx = a.x - b.x;
+                    const dy = a.y - b.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(100, 255, 218, ${0.1 * (1 - dist / 100)})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(animate);
+        }
+
+        initParticles();
+        animate();
+
+        // --- Slide Navigation ---
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slideCounter = document.getElementById('slideCounter');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        let currentSlide = 0;
+        let lastScrollTime = 0;
+        const scrollCooldown = 800; // ms cooldown to prevent rapid skipping
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            slideCounter.innerText = `${currentSlide + 1} / ${slides.length}`;
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        prevBtn.addEventListener('click', prevSlide);
+        nextBtn.addEventListener('click', nextSlide);
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Mouse Wheel Navigation
+        window.addEventListener('wheel', (e) => {
+            const now = Date.now();
+            if (now - lastScrollTime > scrollCooldown) {
+                if (e.deltaY > 0) {
+                    nextSlide();
+                    lastScrollTime = now;
+                } else if (e.deltaY < 0) {
+                    prevSlide();
+                    lastScrollTime = now;
+                }
+            }
+        });
+
+        // Touch Swipe Navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        window.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        window.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchStartX - touchEndX > threshold) {
+                nextSlide(); // Swipe Left
+            }
+            if (touchEndX - touchStartX > threshold) {
+                prevSlide(); // Swipe Right
+            }
+        }
+
+        // Fullscreen Toggle
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        updateSlide();
+    </script>
+</body>
+</html>
