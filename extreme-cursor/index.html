@@ -140,7 +140,7 @@
         ul.feature-list li {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         ul.feature-list li svg {
             color: #64ffda;
@@ -155,6 +155,66 @@
         }
         .challenge-btn {
             animation: pulse-border 2s infinite;
+        }
+        
+        /* TikTok Pop-out Logic */
+        .tiktok-wrapper {
+            position: relative;
+            width: 340px;
+            height: 600px;
+            /* Reserve space in layout */
+        }
+        
+        .video-container {
+            background: #000;
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(100,255,218,0.2);
+            border: 1px solid rgba(20, 184, 166, 0.5);
+            /* Default State: Rotated */
+            transform: rotate(3deg);
+            transform-origin: center center;
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            cursor: pointer;
+        }
+        
+        /* Invisible overlay to capture the initial click */
+        .click-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            background: transparent;
+        }
+
+        /* Make sure iframe fills container */
+        .tiktok-embed {
+            margin: 0 !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
         }
     </style>
 </head>
@@ -176,7 +236,7 @@
         </p>
     </div>
 
-    <!-- Slide 2: The Real Talk -->
+    <!-- Slide 2: The Real Talk (TikTok Hover) -->
     <div class="slide">
         <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
         <div class="flex flex-col md:flex-row items-center justify-center gap-12 max-w-6xl w-full">
@@ -191,24 +251,17 @@
                     </p>
                 </div>
             </div>
-            <div class="flex-1 flex justify-center">
-                <div class="relative w-80 h-80">
-                    <div class="absolute inset-0 bg-teal-500/20 rounded-full animate-pulse blur-3xl"></div>
-                    <div class="relative z-10 bg-[#112240] border border-teal-500/50 p-8 rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                        <div class="space-y-4 font-mono text-sm">
-                            <div class="flex items-center gap-2 text-slate-500">
-                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                            </div>
-                            <div class="text-slate-400">// Old Way</div>
-                            <div class="text-red-400 line-through">public void boilerplate() { ... }</div>
-                            <div class="h-4"></div>
-                            <div class="text-teal-400">// New Way</div>
-                            <div class="text-white">Architecture.design();</div>
-                            <div class="text-white">Logic.curate();</div>
-                            <div class="text-teal-500 cursor-blink">|</div>
-                        </div>
+            <div class="flex-1 flex justify-center w-full">
+                <!-- TikTok Wrapper -->
+                <div class="tiktok-wrapper">
+                    <div class="video-container" id="tiktok-container">
+                         <div class="click-overlay" onclick="toggleTikTok()"></div>
+                         <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@drivegreen0/video/7571735385701616918" data-video-id="7571735385701616918" style="max-width: 605px;min-width: 325px;" > 
+                            <section> 
+                                <a target="_blank" title="@drivegreen0" href="https://www.tiktok.com/@drivegreen0?refer=embed">@drivegreen0</a> 
+                            </section> 
+                        </blockquote> 
+                        <script async src="https://www.tiktok.com/embed.js"></script>
                     </div>
                 </div>
             </div>
@@ -543,34 +596,64 @@
         </div>
     </div>
 
-    <!-- Slide 11: Summary -->
+    <!-- Slide 11: Summary & Visual -->
     <div class="slide text-center">
         <img src="ctera_logo_white.svg" class="absolute top-8 left-8 h-8 opacity-80" alt="Logo">
         <h2 class="text-4xl font-bold text-white mb-10">Mission Brief</h2>
-        <ul class="text-left text-xl md:text-2xl space-y-6 max-w-3xl mx-auto feature-list">
-            <li class="hover:translate-x-2 transition-transform">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                <span class="text-slate-300">Stop coding like a dinosaur. <strong class="text-white">Evolve.</strong></span>
-            </li>
-            <li class="hover:translate-x-2 transition-transform">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span class="text-slate-300">Don't debate the bot. <strong class="text-red-400">Kill it. Restart.</strong></span>
-            </li>
-            <li class="hover:translate-x-2 transition-transform">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <span class="text-slate-300">Markdown is your <strong class="text-yellow-400">Save Point.</strong></span>
-            </li>
-            <li class="hover:translate-x-2 transition-transform">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span class="text-slate-300"><span class="code-snippet text-lg">CLI</span> is the only truth.</span>
-            </li>
-        </ul>
-        <div class="mt-16 relative group cursor-pointer">
-            <div class="absolute -inset-1 bg-gradient-to-r from-teal-400 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <div class="relative px-8 py-6 bg-[#112240] ring-1 ring-gray-900/5 rounded-lg leading-none flex items-center justify-center space-x-6 challenge-btn">
-                <div class="text-center">
-                    <p class="text-teal-400 font-bold text-sm tracking-wider uppercase mb-2">The Question Is:</p>
-                    <p class="text-2xl md:text-3xl font-black text-white">Are you up for the <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">Extreme Cursor Challenge?</span></p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl w-full">
+            <!-- Left Column: Points -->
+            <ul class="text-left text-xl md:text-2xl space-y-6 feature-list">
+                <li class="hover:translate-x-2 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span class="text-slate-300">Stop coding like a dinosaur. <strong class="text-white">Evolve.</strong></span>
+                </li>
+                <li class="hover:translate-x-2 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span class="text-slate-300">Don't debate the bot. <strong class="text-red-400">Kill it. Restart.</strong></span>
+                </li>
+                <li class="hover:translate-x-2 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="text-slate-300">Markdown is your <strong class="text-yellow-400">Save Point.</strong></span>
+                </li>
+                <li class="hover:translate-x-2 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-slate-300"><span class="code-snippet text-lg">CLI</span> or Die.</span>
+                </li>
+            </ul>
+
+            <!-- Right Column: Visual + Button -->
+            <div class="flex flex-col items-center space-y-8">
+                <!-- Code Visual -->
+                <div class="relative w-80 h-80">
+                    <div class="absolute inset-0 bg-teal-500/20 rounded-full animate-pulse blur-3xl"></div>
+                    <div class="relative z-10 bg-[#112240] border border-teal-500/50 p-8 rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                        <div class="space-y-4 font-mono text-sm text-left">
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            </div>
+                            <div class="text-slate-400">// Old Way</div>
+                            <div class="text-red-400 line-through">public void boilerplate() { ... }</div>
+                            <div class="h-4"></div>
+                            <div class="text-teal-400">// New Way</div>
+                            <div class="text-white">Architecture.design();</div>
+                            <div class="text-white">Logic.curate();</div>
+                            <div class="text-teal-500 cursor-blink">|</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Challenge Button -->
+                <div class="relative group cursor-pointer">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-teal-400 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                    <div class="relative px-8 py-6 bg-[#112240] ring-1 ring-gray-900/5 rounded-lg leading-none flex items-center justify-center space-x-6 challenge-btn">
+                        <div class="text-center">
+                            <p class="text-teal-400 font-bold text-xs tracking-wider uppercase mb-1">The Question Is:</p>
+                            <p class="text-xl font-black text-white">Are you up for the <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-500">Extreme Cursor Challenge?</span></p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -759,6 +842,41 @@
                 }
             }
         });
+
+        // TikTok Expand Logic
+        let isExpanded = false;
+        function toggleTikTok() {
+            const container = document.querySelector('#tiktok-container');
+            
+            if (!isExpanded) {
+                // Expand
+                const rect = container.getBoundingClientRect();
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                
+                const elCenterX = rect.left + rect.width / 2;
+                const elCenterY = rect.top + rect.height / 2;
+                
+                const moveX = centerX - elCenterX;
+                const moveY = centerY - elCenterY;
+                
+                // Calculate scale to fit 85% of viewport height
+                const scaleFactor = (window.innerHeight * 0.85) / rect.height;
+                
+                container.style.zIndex = '100';
+                container.style.transform = `translate(${moveX}px, ${moveY}px) scale(${scaleFactor}) rotate(0deg)`;
+                isExpanded = true;
+            } else {
+                // Collapse
+                container.style.transform = 'rotate(3deg)';
+                
+                // Delay z-index reset so it stays on top during shrink animation
+                setTimeout(() => {
+                    if(!isExpanded) container.style.zIndex = '10';
+                }, 500); 
+                isExpanded = false;
+            }
+        }
 
         updateSlide();
     </script>
