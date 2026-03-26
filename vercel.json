@@ -38,6 +38,14 @@
     {
       "source": "/extreme-cursor/",
       "destination": "/extreme-cursor/index.html"
+    },
+    {
+      "source": "/Insight-azure-overview",
+      "destination": "/Insight-azure-overview/index.html"
+    },
+    {
+      "source": "/Insight-azure-overview/",
+      "destination": "/Insight-azure-overview/index.html"
     }
   ],
   "headers": [
