@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/ofekb/OneDrive - CTERA Networks LTD/Documents/**)",
+      "Bash(python -m markitdown \"CTERA-Corporate PPT-Template for Prospects-FEB-2026.pptx\")",
+      "Bash(pip install:*)",
+      "Bash(python -m markitdown \"C:\\\\Users\\\\ofekb\\\\OneDrive - CTERA Networks LTD\\\\Documents\\\\CTERA-Corporate PPT-Template for Prospects-FEB-2026.pptx\")",
+      "Bash(python -m markitdown \"C:\\\\dev\\\\arch-documentation\\\\ctera-template.pptx\")",
+      "Bash(python \"C:\\\\Users\\\\ofekb\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32b9d17a-8beb-4a87-b03b-4b19b0eafe89\\\\0bf46bc0-9b1f-4e21-9706-569d9dcb92c4\\\\skills\\\\pptx\\\\scripts\\\\office\\\\unpack.py\" \"C:\\\\dev\\\\arch-documentation\\\\ctera-template.pptx\" \"C:\\\\dev\\\\arch-documentation\\\\template-unpacked\")",
+      "Bash(python \"C:\\\\Users\\\\ofekb\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32b9d17a-8beb-4a87-b03b-4b19b0eafe89\\\\0bf46bc0-9b1f-4e21-9706-569d9dcb92c4\\\\skills\\\\pptx\\\\scripts\\\\office\\\\soffice.py\" --headless --convert-to pdf \"C:\\\\dev\\\\arch-documentation\\\\ctera-template.pptx\")",
+      "Bash(rm -f template-slide-*.jpg)",
+      "Bash(pdftoppm -jpeg -r 150 ctera-template.pdf template-slide)",
+      "Read(//c/dev/arch-documentation/$PWD/**)",
+      "Bash(where soffice:*)",
+      "Bash(where libreoffice:*)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(ls C:/dev/arch-documentation/Insight-azure-overview/images/ctera_logo*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npx:*)",
+      "Bash(where node:*)",
+      "Bash(where python:*)"
+    ]
+  }
+}
