@@ -476,8 +476,8 @@
                     <div class="toggle-group">
                         <label class="toggle-label">Workload Scale</label>
                         <div class="toggle-buttons" id="scale-toggle">
-                            <button class="scale-large active" data-scale="large">Large (>1B files)</button>
-                            <button class="scale-standard" data-scale="standard">Standard (<1B files)</button>
+                            <button class="scale-large" data-scale="large">Large (>1B files)</button>
+                            <button class="scale-standard active" data-scale="standard">Standard (<1B files)</button>
                         </div>
                     </div>
                 </div>
@@ -849,7 +849,7 @@
 
         // ===== State =====
         let selectedCloud = 'aws';
-        let selectedScale = 'large';
+        let selectedScale = 'standard';
         let lastCalc = null;
 
         // ===== Helpers =====
@@ -1468,9 +1468,9 @@
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
             doc.setTextColor(0);
-            doc.text('Deployment Parameters', left, y); y += 6;
+            doc.text('Deployment Parameters', left, y); y += 5;
             doc.setFont(undefined, 'normal');
-            doc.setFontSize(10);
+            doc.setFontSize(9);
             const cfg = [
                 'Cloud: ' + cloudLabel,
                 'Topology: ' + azLabel,
@@ -1483,30 +1483,30 @@
                 'OS data per-node disk: ' + fmtGB(S.diskPerNodeGB),
                 'Object storage (input + checkpoints): ' + fmtGB(S.s3InputGB)
             ];
-            cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 5; });
-            y += 4;
+            cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 4.5; });
+            y += 3;
 
             // ===== COST SUMMARY =====
             checkPage(25);
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text('Cost Summary', left, y); y += 6;
-            doc.setFontSize(10);
+            doc.text('Cost Summary', left, y); y += 5;
+            doc.setFontSize(9);
             doc.setFont(undefined, 'normal');
             const summary = [
                 ['Monthly', fmt$(C.total)],
                 ['1 Year',  fmt$(C.total * 12)],
                 ['3 Years', fmt$(C.total * 36)]
             ];
-            summary.forEach(([k, v]) => { checkPage(); doc.text(k, left, y); doc.text(v, left + 80, y, { align: 'right' }); y += 5; });
-            y += 6;
+            summary.forEach(([k, v]) => { checkPage(); doc.text(k, left, y); doc.text(v, left + 80, y, { align: 'right' }); y += 4.5; });
+            y += 4;
 
             // ===== BILL OF MATERIALS =====
             checkPage(15);
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text('Bill of Materials', left, y); y += 6;
-            doc.setFontSize(8);
+            doc.text('Bill of Materials', left, y); y += 5;
+            doc.setFontSize(7.5);
 
             const colHeaders = ['Service', 'Qty', 'Unit price', 'Monthly'];
             const colWidths  = [85, 20, 38, 25];
@@ -1534,9 +1534,9 @@
             Object.keys(grouped).forEach(cat => {
                 checkPage(15);
                 doc.setFont(undefined, 'bold');
-                doc.setFontSize(10);
-                doc.text(cat, left, y); y += 5;
-                doc.setFontSize(8);
+                doc.setFontSize(9);
+                doc.text(cat, left, y); y += 4;
+                doc.setFontSize(7.5);
                 drawHeaders();
 
                 grouped[cat].forEach(r => {
@@ -1546,21 +1546,21 @@
                         s = String(s);
                         return s.length > max ? s.slice(0, max - 1) + '\u2026' : s;
                     };
-                    doc.text(truncate(r.service, 50), x, y); x += colWidths[0];
+                    doc.text(truncate(r.service, 55), x, y); x += colWidths[0];
                     doc.text(truncate(String(r.qty), 12), x + colWidths[1] - 1, y, { align: 'right' }); x += colWidths[1];
                     doc.text(truncate(fmt$(r.unitPrice, 4) + '/' + r.unit, 22), x + colWidths[2] - 1, y, { align: 'right' }); x += colWidths[2];
                     doc.text(r.monthly ? fmt$(r.monthly) : '-', x + colWidths[3] - 1, y, { align: 'right' });
-                    y += 4.5;
+                    y += 4;
                     if (r.note) {
                         doc.setTextColor(120);
-                        doc.setFontSize(7);
-                        doc.text(truncate(r.note, 110), left + 2, y);
+                        doc.setFontSize(6.5);
+                        doc.text(truncate(r.note, 130), left + 2, y);
                         doc.setTextColor(0);
-                        doc.setFontSize(8);
-                        y += 4;
+                        doc.setFontSize(7.5);
+                        y += 3.5;
                     }
                 });
-                y += 4;
+                y += 3;
             });
 
             checkPage(20);
