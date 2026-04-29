@@ -1483,14 +1483,14 @@
                 'OS data per-node disk: ' + fmtGB(S.diskPerNodeGB),
                 'Object storage (input + checkpoints): ' + fmtGB(S.s3InputGB)
             ];
-            cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 4.5; });
-            y += 3;
+            cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 4; });
+            y += 2;
 
             // ===== COST SUMMARY =====
             checkPage(25);
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text('Cost Summary', left, y); y += 5;
+            doc.text('Cost Summary', left, y); y += 4.5;
             doc.setFontSize(9);
             doc.setFont(undefined, 'normal');
             const summary = [
@@ -1499,13 +1499,13 @@
                 ['3 Years', fmt$(C.total * 36)]
             ];
             summary.forEach(([k, v]) => { checkPage(); doc.text(k, left, y); doc.text(v, left + 80, y, { align: 'right' }); y += 4.5; });
-            y += 4;
+            y += 2;
 
             // ===== BILL OF MATERIALS =====
             checkPage(15);
             doc.setFontSize(11);
             doc.setFont(undefined, 'bold');
-            doc.text('Bill of Materials', left, y); y += 5;
+            doc.text('Bill of Materials', left, y); y += 4.5;
             doc.setFontSize(7.5);
 
             const colHeaders = ['Service', 'Qty', 'Unit price', 'Monthly'];
@@ -1550,7 +1550,7 @@
                     doc.text(truncate(String(r.qty), 12), x + colWidths[1] - 1, y, { align: 'right' }); x += colWidths[1];
                     doc.text(truncate(fmt$(r.unitPrice, 4) + '/' + r.unit, 22), x + colWidths[2] - 1, y, { align: 'right' }); x += colWidths[2];
                     doc.text(r.monthly ? fmt$(r.monthly) : '-', x + colWidths[3] - 1, y, { align: 'right' });
-                    y += 4;
+                    y += 3.5;
                     if (r.note) {
                         doc.setTextColor(120);
                         doc.setFontSize(6.5);
@@ -1560,13 +1560,13 @@
                         y += 3.5;
                     }
                 });
-                y += 3;
+                y += 1.5;
             });
 
             checkPage(20);
-            y += 2;
+            y += 1;
             doc.setDrawColor(0);
-            doc.line(left, y, left + totalWidth, y); y += 5;
+            doc.line(left, y, left + totalWidth, y); y += 4;
             doc.setFont(undefined, 'bold');
             doc.setFontSize(10);
             doc.text('Monthly Total', left, y);
@@ -1608,6 +1608,7 @@
         calculateBtn.addEventListener('click', runCalculations);
 
         // Initial calc on load (so page isn't blank-feeling)
+        applyScaleConfig();
         runCalculations();
     });
     </script>
