@@ -1128,7 +1128,7 @@
             rows.push({ cat: 'Network', service: 'NAT Gateway (data processing)',         qty: `~${(I.egressGB + S.s3InputGB / 30).toFixed(0)} GB`, unit: 'GB', unitPrice: P.natGB, monthly: C.natData, note: '' });
             rows.push({ cat: 'Network', service: 'Internet egress',                       qty: `${I.egressGB} GB`,             unit: 'GB',  unitPrice: P.egressGB,    monthly: C.egress,   note: 'Customer-side egress estimate' });
             if (I.az === 3) {
-                rows.push({ cat: 'Network', service: 'Cross-AZ replication',                  qty: `${fmtGB(S.monthlyReplicaGB)}`, unit: 'GB',  unitPrice: P.crossAzGB,   monthly: C.crossAz,  note: 'OpenSearch primary→replica across AZs' });
+                rows.push({ cat: 'Network', service: 'Cross-AZ replication',                  qty: `${fmtGB(S.monthlyReplicaGB)}`, unit: 'GB',  unitPrice: P.crossAzGB,   monthly: C.crossAz,  note: 'OpenSearch primary to replica across AZs' });
             }
             rows.push({ cat: 'Network', service: P.dnsLabel,                              qty: 1,                              unit: 'mo',  unitPrice: P.dnsZoneMo,   monthly: C.dns,      note: '' });
 
