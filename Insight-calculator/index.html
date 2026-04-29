@@ -493,7 +493,7 @@
                     <div class="input-group">
                         <label for="change-rate">
                             Daily Change Rate (%)
-                            <span class="info-tip" title="Portion of files that change per day. Drives Flink ingest duration and cross-AZ replication volume.">ⓘ</span>
+                            <span class="info-tip" title="Portion of files that change per day. Drives ingestor processing duration and cross-AZ replication volume.">ⓘ</span>
                         </label>
                         <input type="number" id="change-rate" step="0.1" value="0.5">
                     </div>
@@ -519,7 +519,7 @@
                             <h3>Storage / Sizing Constants</h3>
                             <div class="input-grid">
                                 <div class="input-group">
-                                    <label for="state-per-file">Flink state per file (KB)</label>
+                                    <label for="state-per-file">Ingestor state per file (KB)</label>
                                     <input type="number" id="state-per-file" step="0.05" value="0.5">
                                 </div>
                                 <div class="input-group">
@@ -554,10 +554,10 @@
                         </div>
 
                         <div class="advanced-section">
-                            <h3>Flink Sizing</h3>
+                            <h3>Data Ingestor Sizing</h3>
                             <div class="input-grid">
                                 <div class="input-group">
-                                    <label for="flink-duty-cycle">Flink duty cycle (%)</label>
+                                    <label for="flink-duty-cycle">Ingestor duty cycle (%)</label>
                                     <input type="number" id="flink-duty-cycle" step="1" value="33">
                                 </div>
                                 <div class="input-group">
@@ -565,7 +565,7 @@
                                     <input type="number" id="flink-nvme-usage" step="1" value="85">
                                 </div>
                                 <div class="input-group">
-                                    <label for="flink-min-tms">Minimum metadata TMs</label>
+                                    <label for="flink-min-tms">Minimum ingestor nodes</label>
                                     <input type="number" id="flink-min-tms" value="2">
                                 </div>
                             </div>
@@ -675,15 +675,15 @@
 
             <h3>What's Modeled</h3>
             <ul>
-                <li><strong>Workload cluster:</strong> EKS/AKS control plane, OpenSearch (3 master + N data nodes), application nodes (Atlantis, Backoffice, ArgoCD, Argo Workflows, insight-ui, agent-service, self-hosted Git, self-hosted artifact registry), Flink JobManagers (always-on) and metadata TaskManagers (scale-to-zero, hourly runs).</li>
-                <li><strong>Storage:</strong> EBS gp3 / Premium SSD v2 for OpenSearch data nodes (sized from retention), application-node PVCs for Git + artifact repo, S3 / Blob Hot for input bucket and Flink checkpoints.</li>
+                <li><strong>Workload cluster:</strong> Kubernetes control plane, OpenSearch (3 master + N data nodes), application nodes (Atlantis, Backoffice, ArgoCD, Argo Workflows, insight-ui, agent-service, self-hosted Git, self-hosted artifact registry), Ingestor JobManagers (always-on) and processing nodes (scale-to-zero, hourly runs).</li>
+                <li><strong>Storage:</strong> EBS gp3 / Premium SSD v2 for OpenSearch data nodes (sized from retention), application-node PVCs for Git + artifact repo, S3 / Blob Hot for input bucket and ingestor checkpoints.</li>
                 <li><strong>Network:</strong> Internal load balancers, NAT Gateway, cross-AZ OpenSearch replication (when 3-AZ enabled), egress, DNS.</li>
                 <li><strong>Managed services:</strong> Secrets Manager / Key Vault, KMS / Key Vault keys, CloudWatch / Log Analytics.</li>
             </ul>
 
             <h3>Key Sizing Formulas</h3>
             <ul>
-                <li><strong>Flink metadata TMs</strong> = max(min, ceil(state_GB / (NVMe × 85%))), where state_GB = files × 0.5 KB.</li>
+                <li><strong>Ingestor processing nodes</strong> = max(min, ceil(state_GB / (NVMe × 85%))), where state_GB = files × 0.5 KB.</li>
                 <li><strong>OpenSearch storage</strong> = (fs_md + audit_rollup + folder_snapshots) × (1 + replicas) × 1.3 indexing overhead, divided across data nodes.</li>
                 <li><strong>Audit log volume</strong> = files × 0.012 rollup rows/day. Only rolled-up records are stored; raw events are out of scope for OS sizing.</li>
                 <li><strong>Folder snapshots</strong> = (files × 2%) × 1 KB/day × retention.</li>
@@ -740,6 +740,24 @@
             };
             // Load cleanly from the images directory
             img.src = 'images/ctera_logo_dark.svg';
+        })();
+
+        // ===== Architecture Diagram (loaded for PDF) =====
+        let archImg = null;
+        (function() {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                archImg = {
+                    data: canvas.toDataURL('image/png'),
+                    ratio: img.height / img.width
+                };
+            };
+            img.src = 'images/Arch-diagram.png';
         })();
 
         // ===== Default list prices =====
@@ -956,12 +974,12 @@
             const folders = I.files * (I.folderRatioPct / 100);
             const changedFiles = I.files * (I.changeRatePct / 100);
 
-            // Flink metadata state
+            // Ingestor metadata state
             const stateGB = (I.files * I.statePerFileKB) / MB;
-            const usableNvmePerTm = P.flinkTmNvmeGB * (I.flinkNvmePct / 100);
-            const flinkMdTms = Math.max(I.flinkMinTms, Math.ceil(stateGB / usableNvmePerTm));
-            const flinkDutyHrsPerDay = 24 * (I.flinkDutyPct / 100);
-            const flinkMdHrsPerMonth = flinkMdTms * flinkDutyHrsPerDay * DAYS_PER_MONTH;
+            const usableNvmePerNode = P.flinkTmNvmeGB * (I.flinkNvmePct / 100);
+            const ingestorNodes = Math.max(I.flinkMinTms, Math.ceil(stateGB / usableNvmePerNode));
+            const ingestorDutyHrsPerDay = 24 * (I.flinkDutyPct / 100);
+            const ingestorHrsPerMonth = ingestorNodes * ingestorDutyHrsPerDay * DAYS_PER_MONTH;
 
             // OpenSearch storage components
             const fsMdGB = (I.files * I.mdRecordSizeKB * 1.2) / MB;
@@ -980,14 +998,14 @@
                 + snapDailyGB;
             const monthlyReplicaGB = (I.az === 3) ? dailyWritesGB * I.replicas * DAYS_PER_MONTH : 0;
 
-            // S3 / Blob (input bucket 90d + Flink checkpoints)
+            // S3 / Blob (input bucket 90d + Ingestor checkpoints)
             const s3InputGB = (changedFiles * 1) * 90 / MB                       // raw md events ~1KB
                 + (auditRollupPerDay * I.auditRecordSizeBytes * 90) / GB         // raw audit input
                 + stateGB * 1.5;                                                 // checkpoints
 
             return {
-                folders, changedFiles, stateGB, usableNvmePerTm,
-                flinkMdTms, flinkDutyHrsPerDay, flinkMdHrsPerMonth,
+                folders, changedFiles, stateGB, usableNvmePerNode,
+                ingestorNodes, ingestorDutyHrsPerDay, ingestorHrsPerMonth,
                 fsMdGB, auditRollupPerDay, auditGB, snapDailyGB, snapTotalGB,
                 rawDataGB, provisionedGB, diskPerNodeGB,
                 monthlyReplicaGB, s3InputGB
@@ -1000,8 +1018,8 @@
             const osMaster = 3 * P.osMasterHr * HOURS_PER_MONTH;
             const osData = I.osDataNodes * P.osDataHr * HOURS_PER_MONTH;
             const appNode = I.appNodes * P.appNodeHr * HOURS_PER_MONTH;
-            const flinkTm = S.flinkMdHrsPerMonth * P.flinkTmHr;
-            const compute = k8s + osMaster + osData + appNode + flinkTm;
+            const ingestor = S.ingestorHrsPerMonth * P.flinkTmHr;
+            const compute = k8s + osMaster + osData + appNode + ingestor;
 
             // ----- Storage -----
             const osDataDisk = I.osDataNodes * S.diskPerNodeGB * P.ebsGB;
@@ -1029,7 +1047,7 @@
             const total = compute + storage + network + managed;
 
             return {
-                k8s, osMaster, osData, appNode, flinkTm, compute,
+                k8s, osMaster, osData, appNode, ingestor, compute,
                 osDataDisk, osMasterDisk, appPvc, objectStorage, storage,
                 lbs, natBase, natData, egress, crossAz, dns, network,
                 secrets, kms, logs, managed,
@@ -1095,14 +1113,14 @@
             rows.push({ cat: 'Compute', service: P.k8sLabel,                 qty: 1,                                   unit: 'mo',     unitPrice: P.k8sControlPlaneHr * HOURS_PER_MONTH,                  monthly: C.k8s,         note: '' });
             rows.push({ cat: 'Compute', service: `OS master (${P.osMasterLabel})`, qty: 3,                              unit: 'hr×730', unitPrice: P.osMasterHr,                                            monthly: C.osMaster,    note: '' });
             rows.push({ cat: 'Compute', service: `OS data (${P.osDataLabel})`,    qty: I.osDataNodes,                   unit: 'hr×730', unitPrice: P.osDataHr,                                              monthly: C.osData,      note: '' });
-            rows.push({ cat: 'Compute', service: `App nodes (${P.appNodeLabel})`, qty: I.appNodes,                      unit: 'hr×730', unitPrice: P.appNodeHr,                                             monthly: C.appNode,     note: 'Hosts insight-ui, Atlantis, Backoffice, ArgoCD, agent-service, Git, Artifact, Flink JMs (md + audit)' });
-            rows.push({ cat: 'Compute', service: `Flink metadata TMs (${P.flinkTmLabel})`, qty: S.flinkMdTms,           unit: `hr (~${Math.round(S.flinkDutyHrsPerDay)} h/day × 30.44)`, unitPrice: P.flinkTmHr, monthly: C.flinkTm, note: `${I.flinkDutyPct}% duty cycle, hourly runs ~20 min` });
+            rows.push({ cat: 'Compute', service: `App nodes (${P.appNodeLabel})`, qty: I.appNodes,                      unit: 'hr×730', unitPrice: P.appNodeHr,                                             monthly: C.appNode,     note: 'Hosts insight-ui, Atlantis, Backoffice, ArgoCD, agent-service, Git, Artifact, Ingestor JMs (md + audit)' });
+            rows.push({ cat: 'Compute', service: `Data Ingestor nodes (${P.flinkTmLabel})`, qty: S.ingestorNodes,       unit: `hr (~${Math.round(S.ingestorDutyHrsPerDay)} h/day × 30.44)`, unitPrice: P.flinkTmHr, monthly: C.ingestor, note: `${I.flinkDutyPct}% duty cycle, hourly runs ~20 min` });
 
             // ---- Storage ----
             rows.push({ cat: 'Storage', service: `OS data ${P.blockLabel}`,        qty: `${I.osDataNodes} × ${S.diskPerNodeGB} GiB`, unit: 'GB-mo', unitPrice: P.ebsGB,    monthly: C.osDataDisk,    note: 'Sized from retention + replicas + overhead' });
             rows.push({ cat: 'Storage', service: `OS master ${P.blockLabel}`,      qty: '3 × 10 GiB',                                  unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.osMasterDisk,  note: '' });
             rows.push({ cat: 'Storage', service: `App-node PVC (Git + Artifact)`,  qty: `${I.gitPvcGB} GiB`,                           unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.appPvc,        note: 'Self-hosted Git server + artifact registry' });
-            rows.push({ cat: 'Storage', service: `${P.objectLabel} (input + checkpoints)`, qty: `${fmtGB(S.s3InputGB)}`,                unit: 'GB-mo', unitPrice: P.objectGB, monthly: C.objectStorage, note: 'Input bucket (90 d lifecycle) + Flink S3 checkpoints' });
+            rows.push({ cat: 'Storage', service: `${P.objectLabel} (input + checkpoints)`, qty: `${fmtGB(S.s3InputGB)}`,                unit: 'GB-mo', unitPrice: P.objectGB, monthly: C.objectStorage, note: 'Input bucket (90 d lifecycle) + Ingestor checkpoints' });
 
             // ---- Network ----
             rows.push({ cat: 'Network', service: P.lbLabel,                                qty: I.numLbs,                       unit: 'mo',  unitPrice: P.lbMo,        monthly: C.lbs,      note: '' });
@@ -1136,10 +1154,10 @@
             const { I, P, S } = lastCalc;
             const formulaMap = {
                 compute: [
-                    `Flink metadata state = ${fmtN(I.files, 0)} files × ${I.statePerFileKB} KB = ${fmtGB(S.stateGB)}`,
-                    `Flink TMs = max(${I.flinkMinTms}, ceil(${fmtGB(S.stateGB)} / ${(P.flinkTmNvmeGB * I.flinkNvmePct / 100).toFixed(1)} GB usable)) = ${S.flinkMdTms}`,
-                    `Flink monthly hours = ${S.flinkMdTms} TMs × ${(S.flinkDutyHrsPerDay).toFixed(1)} h/day × 30.44 = ${fmtN(S.flinkMdHrsPerMonth, 0)} h`,
-                    `Audit ingestion runs as 1 always-on TM on application nodes (folded into App nodes line)`
+                    `Ingestor state = ${fmtN(I.files, 0)} files × ${I.statePerFileKB} KB = ${fmtGB(S.stateGB)}`,
+                    `Ingestor nodes = max(${I.flinkMinTms}, ceil(${fmtGB(S.stateGB)} / ${(P.flinkTmNvmeGB * I.flinkNvmePct / 100).toFixed(1)} GB usable)) = ${S.ingestorNodes}`,
+                    `Ingestor monthly hours = ${S.ingestorNodes} nodes × ${(S.ingestorDutyHrsPerDay).toFixed(1)} h/day × 30.44 = ${fmtN(S.ingestorHrsPerMonth, 0)} h`,
+                    `Audit ingestion runs as 1 always-on process on application nodes (folded into App nodes line)`
                 ],
                 storage: [
                     `fs_md = ${fmtN(I.files, 0)} × ${I.mdRecordSizeKB} KB × 1.2 = ${fmtGB(S.fsMdGB)}`,
@@ -1147,7 +1165,7 @@
                     `Snapshots = ${fmtN(S.folders, 0)} folders × ${I.snapRecordSizeKB} KB/day × ${I.retentionDays} d = ${fmtGB(S.snapTotalGB)}`,
                     `Raw total = ${fmtGB(S.rawDataGB)} → provisioned (×${(1 + I.replicas)} replicas × ${I.overhead} overhead) = ${fmtGB(S.provisionedGB)}`,
                     `Per data-node disk = ${fmtGB(S.provisionedGB)} / ${I.osDataNodes} nodes = ${fmtGB(S.diskPerNodeGB)} (rounded up to nearest 100 GiB)`,
-                    `Object storage ≈ ${fmtGB(S.s3InputGB)} (input bucket 90 d + Flink checkpoints)`
+                    `Object storage ≈ ${fmtGB(S.s3InputGB)} (input bucket 90 d + Ingestor checkpoints)`
                 ],
                 network: I.az === 3 ? [
                     `Daily writes ≈ md changes + audit rollup + snapshots`,
@@ -1198,8 +1216,8 @@
                 { key: 'osMasterHr',  label: `${P.osMasterLabel} (OS master)`,        unit: '$/hr' },
                 { key: 'osDataHr',    label: `${P.osDataLabel} (OS data)`,            unit: '$/hr' },
                 { key: 'appNodeHr',   label: `${P.appNodeLabel} (app nodes)`,         unit: '$/hr' },
-                { key: 'flinkTmHr',   label: `${P.flinkTmLabel} (Flink TM)`,          unit: '$/hr' },
-                { key: 'flinkTmNvmeGB', label: `Flink TM local NVMe / SSD`,           unit: 'GB' },
+                { key: 'flinkTmHr',   label: `${P.flinkTmLabel} (Ingestor node)`,     unit: '$/hr' },
+                { key: 'flinkTmNvmeGB', label: `Ingestor local NVMe / SSD`,           unit: 'GB' },
                 { key: 'ebsGB',       label: `${P.blockLabel} (OS data disk)`,        unit: '$/GB-mo' },
                 { key: 'blockGB',     label: 'Other block storage (master, PVC)',     unit: '$/GB-mo' },
                 { key: 'objectGB',    label: `${P.objectLabel}`,                       unit: '$/GB-mo' },
@@ -1368,10 +1386,19 @@
             doc.setFont(undefined, 'normal');
             doc.setFontSize(9);
             doc.setTextColor(0);
-            const p2 = 'This document estimates the steady-state cloud infrastructure cost for a BYOC (Bring Your Own Cloud) Insight deployment \u2014 a dedicated cluster running in your own ' + cloudLabel + ' subscription, fully isolated within your cloud account. The cluster hosts all components required to run Insight: the search and analytics engine (OpenSearch), the metadata streaming pipeline (Apache Flink), the Insight dashboard and AI agent, and the supporting platform services.';
+            const p2 = 'This document estimates the steady-state cloud infrastructure cost for a BYOC (Bring Your Own Cloud) Insight deployment \u2014 a dedicated Kubernetes cluster running in your own ' + cloudLabel + ' subscription, fully isolated within your cloud account. As shown in the architecture diagram below, the billed infrastructure consists of the OpenSearch indexing cluster, the data ingestor processing nodes, the platform services, and cloud object storage.';
             const p2Lines = doc.splitTextToSize(p2, pw - left * 2);
             p2Lines.forEach(line => { checkPage(5); doc.text(line, left, y); y += 4.5; });
-            y += 5;
+            y += 3;
+
+            // ===== ARCHITECTURE DIAGRAM =====
+            if (archImg) {
+                const archW = pw - left * 2;
+                const archH = archW * archImg.ratio;
+                checkPage(archH + 10);
+                doc.addImage(archImg.data, 'PNG', left, y, archW, archH);
+                y += archH + 8;
+            }
 
             // Block 3 - How costs are calculated (with table)
             checkPage(45);
@@ -1432,11 +1459,9 @@
             doc.setTextColor(0);
             y += 5;
 
-            // Thin rule before parameters
-            doc.setDrawColor(180);
-            doc.setLineWidth(0.3);
-            doc.line(left, y, pw - left, y);
-            y += 8;
+            // Force new page for the actual data
+            doc.addPage();
+            y = 18;
 
             // ===== DEPLOYMENT PARAMETERS =====
             checkPage(20);
@@ -1454,7 +1479,7 @@
                 'Retention: ' + I.retentionDays + ' days',
                 'OS data nodes: ' + I.osDataNodes + ' \u00d7 ' + P.osDataLabel,
                 'App nodes: ' + I.appNodes + ' \u00d7 ' + P.appNodeLabel,
-                'Flink metadata TMs: ' + S.flinkMdTms + ' \u00d7 ' + P.flinkTmLabel + ' (' + I.flinkDutyPct + '% duty cycle)',
+                'Data ingestor nodes: ' + S.flinkMdTms + ' \u00d7 ' + P.flinkTmLabel + ' (' + I.flinkDutyPct + '% duty cycle)',
                 'OS data per-node disk: ' + fmtGB(S.diskPerNodeGB),
                 'Object storage (input + checkpoints): ' + fmtGB(S.s3InputGB)
             ];
