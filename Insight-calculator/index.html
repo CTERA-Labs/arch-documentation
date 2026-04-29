@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Data Architecture Cost Calculator</title>
+    <title>CTERA Insight - BYOC Cost Calculator</title>
     <style>
         :root {
             --primary-color: #007bff;
@@ -13,7 +13,12 @@
             --text-color: #343a40;
             --border-color: #dee2e6;
             --success-color: #28a745;
+            --warning-color: #ffc107;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffe69c;
             --shadow-color: rgba(0, 0, 0, 0.1);
+            --aws-color: #ff9900;
+            --azure-color: #0078d4;
         }
 
         body {
@@ -30,7 +35,7 @@
 
         .container {
             width: 100%;
-            max-width: 960px;
+            max-width: 1080px;
             background-color: var(--surface-color);
             border-radius: 12px;
             box-shadow: 0 4px 12px var(--shadow-color);
@@ -42,17 +47,43 @@
             color: white;
             padding: 1.5rem 2rem;
             text-align: center;
+            position: relative;
         }
 
         header h1 {
-            margin: 0;
+            margin: 0 0 0.25rem 0;
             font-size: 1.75rem;
         }
-        
+
+        header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        #info-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .price-banner {
+            background-color: #fff3cd;
+            color: #664d03;
+            border-bottom: 1px solid #ffe69c;
+            padding: 0.75rem 2rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .price-banner strong {
+            color: #573e02;
+        }
+
         main {
             padding: 2rem;
             display: grid;
-            gap: 2rem;
+            gap: 1.75rem;
         }
 
         .card {
@@ -70,12 +101,70 @@
             margin-bottom: 1.5rem;
         }
 
+        .toggle-row {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-group {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .toggle-group label.toggle-label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .toggle-buttons button {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .toggle-buttons button:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .toggle-buttons button.active {
+            color: white;
+        }
+
+        .toggle-buttons button.aws.active {
+            background-color: var(--aws-color);
+        }
+
+        .toggle-buttons button.azure.active {
+            background-color: var(--azure-color);
+        }
+
+        .toggle-buttons button.scale-large.active,
+        .toggle-buttons button.scale-standard.active {
+            background-color: var(--primary-color);
+        }
+
         .input-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
         }
-        
+
         .input-group {
             display: flex;
             flex-direction: column;
@@ -84,10 +173,20 @@
         .input-group label {
             font-weight: 600;
             margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .input-group .info-tip {
+            color: var(--secondary-color);
+            font-size: 0.8rem;
+            cursor: help;
+            border-bottom: 1px dotted var(--secondary-color);
         }
 
         .input-group input {
-            padding: 0.75rem;
+            padding: 0.65rem;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 1rem;
@@ -103,47 +202,27 @@
         .button-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-top: 1.5rem;
         }
 
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.65rem 1.25rem;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s, transform 0.1s;
         }
 
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-        
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-        .btn-success:hover {
-            background-color: #1e7e34;
-        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-secondary:hover { background-color: #545b62; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success:hover { background-color: #1e7e34; }
 
         #advanced-config {
             max-height: 0;
@@ -153,21 +232,64 @@
         }
 
         #advanced-config.show {
-            max-height: 500px; /* Adjust as needed */
-            margin-top: 2rem;
+            max-height: 1500px;
+            margin-top: 1.5rem;
         }
 
-        #results-card {
-            display: none; /* Hidden by default */
+        .advanced-section {
+            margin-top: 1.5rem;
         }
-        
+
+        .advanced-section:first-child { margin-top: 0; }
+
+        .advanced-section h3 {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin: 0 0 0.75rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        #results-card { display: none; }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-tile {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            background-color: var(--background-color);
+        }
+
+        .summary-tile .label {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-tile .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-top: 0.4rem;
+            font-family: "Courier New", Courier, monospace;
+        }
+
         .results-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .results-table th, .results-table td {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
@@ -175,61 +297,82 @@
         .results-table th {
             background-color: var(--background-color);
             font-weight: 600;
+            font-size: 0.9rem;
         }
-        
-        .results-table td:nth-child(2), .results-table td:nth-child(3) {
-            font-weight: bold;
-            font-family: "Courier New", Courier, monospace;
+
+        .results-table td.amount,
+        .results-table th.amount {
             text-align: right;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
         }
 
-        .results-table tbody tr {
-            transition: background-color 0.2s;
-        }
-
-        .results-table tbody tr[data-architecture]:hover {
-            background-color: #f1f1f1;
+        .results-table tbody tr.category-row {
             cursor: pointer;
+            transition: background-color 0.15s;
         }
 
-        .disclaimer {
-            font-size: 0.8rem;
-            color: var(--secondary-color);
-            margin-left: 5px;
-            cursor: help;
+        .results-table tbody tr.category-row:hover {
+            background-color: #f1f5f9;
         }
 
-        /* Modal Styles */
+        .results-table tfoot td {
+            font-weight: 700;
+            border-top: 2px solid var(--border-color);
+            background-color: var(--background-color);
+        }
+
+        .warning-banner {
+            background-color: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            color: #664d03;
+            font-size: 0.9rem;
+        }
+
+        .warning-banner strong { display: block; margin-bottom: 0.25rem; }
+
+        .info-note {
+            background-color: #e7f3ff;
+            border-left: 3px solid var(--primary-color);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            color: #0c5396;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+
         .modal {
             display: none;
             position: fixed;
             z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
         }
 
-        .modal.show {
-            display: flex;
-        }
+        .modal.show { display: flex; }
 
         .modal-content {
-            background-color: #fefefe;
+            background-color: white;
             margin: auto;
             padding: 2rem;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 700px;
             border-radius: 8px;
             position: relative;
             animation: fadeIn 0.3s;
+            width: 90%;
+            max-width: 760px;
+            max-height: 88vh;
+            overflow-y: auto;
         }
-        
+
+        .modal-content.wide { max-width: 920px; }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -245,980 +388,1204 @@
             cursor: pointer;
         }
 
-        .close-btn:hover,
-        .close-btn:focus {
-            color: black;
-            text-decoration: none;
-        }
-        
-        .aws-costs-table, .breakdown-table {
+        .close-btn:hover { color: black; }
+
+        .breakdown-table, .price-table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 0.5rem;
         }
-        .aws-costs-table th, .aws-costs-table td,
-        .breakdown-table th, .breakdown-table td {
-            padding: 0.75rem;
+
+        .breakdown-table th, .breakdown-table td,
+        .price-table th, .price-table td {
+            padding: 0.65rem;
             border: 1px solid var(--border-color);
+            font-size: 0.9rem;
             vertical-align: top;
         }
-        .aws-costs-table th, .breakdown-table th {
+
+        .breakdown-table th, .price-table th {
             background-color: #f2f2f2;
             text-align: left;
         }
-        .breakdown-table th {
-             width: 35%;
+
+        .breakdown-table td.num, .breakdown-table th.num,
+        .price-table td.num, .price-table th.num {
+            text-align: right;
+            font-family: "Courier New", Courier, monospace;
         }
+
         .breakdown-table .formula {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--secondary-color);
             font-style: italic;
             display: block;
-            margin-top: 4px;
+            margin-top: 0.3rem;
         }
 
-        .breakdown-table tr.component-row {
-            cursor: pointer;
+        .price-table input.price-edit {
+            width: 100%;
+            padding: 0.3rem 0.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            text-align: right;
         }
-        .breakdown-table tr.component-row:hover {
-            background-color: #f7f7f7;
-        }
-        .breakdown-table .detail-row td {
-            text-align: left;
-        }
-        .calculation-detail {
-            background-color: #fafafa;
-            padding: 1rem;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
-            border-top: 1px dashed var(--border-color);
-            text-align: left;
-        }
-        
-        #export-options-modal .input-group {
-            align-items: flex-start;
-            gap: 1rem;
-        }
-         #export-options-modal .input-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: normal;
+
+        .modal-content h2 { margin-top: 0; color: var(--primary-color); }
+        .modal-content h3 { color: var(--text-color); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        .modal-content p { line-height: 1.55; }
+
+        .scope-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffe69c;
+            border-radius: 6px;
+            padding: 0.85rem 1rem;
+            margin-top: 1rem;
+            color: #664d03;
+            font-size: 0.88rem;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
         <header>
-            <h1>Cloud Data Architecture Cost Calculator</h1>
-            <button id="info-btn" class="btn btn-secondary" style="position: absolute; top: 1.5rem; left: 1.5rem; padding: 0.5rem 1rem;">ⓘ Model Info</button>
+            <button id="info-btn" class="btn btn-secondary">ⓘ Model Info</button>
+            <h1>CTERA Insight - BYOC Cost Calculator</h1>
+            <div class="subtitle">Single workload cluster, single tenant - customer cloud deployment</div>
         </header>
 
+        <div class="price-banner">
+            <strong>Pricing basis:</strong> AWS us-east-1 / Azure East US <strong>on-demand list price</strong>.
+            Apply contracted, Reserved, or Savings Plan discounts to the BoM export.
+            <a href="#" id="view-prices-link" style="color: #573e02; margin-left: 0.5rem;">View / edit list prices →</a>
+        </div>
+
         <main>
-            <!-- Inputs Section -->
             <div class="card" id="inputs-card">
-                <h2>1. Configuration Inputs</h2>
+                <h2>1. Configuration</h2>
+
+                <div class="toggle-row">
+                    <div class="toggle-group">
+                        <label class="toggle-label">Cloud Provider</label>
+                        <div class="toggle-buttons" id="cloud-toggle">
+                            <button class="aws active" data-cloud="aws">AWS (us-east-1)</button>
+                            <button class="azure" data-cloud="azure">Azure (East US)</button>
+                        </div>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-label">Workload Scale</label>
+                        <div class="toggle-buttons" id="scale-toggle">
+                            <button class="scale-large active" data-scale="large">Large (>1B files)</button>
+                            <button class="scale-standard" data-scale="standard">Standard (<1B files)</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="input-grid">
                     <div class="input-group">
-                        <label for="num-files">Number of Files (e.g., 500M, 2.5B)</label>
-                        <input type="text" id="num-files" value="2.5B">
+                        <label for="num-files">
+                            Number of Files
+                            <span class="info-tip" title="Total filesystem nodes ingested into Insight. Accepts shorthand like 100M, 1B, 5B.">ⓘ</span>
+                        </label>
+                        <input type="text" id="num-files" value="100M">
                     </div>
                     <div class="input-group">
-                        <label for="hot-retention">Hot Tier Retention (Days)</label>
-                        <input type="number" id="hot-retention" value="7">
+                        <label for="change-rate">
+                            Daily Change Rate (%)
+                            <span class="info-tip" title="Portion of files that change per day. Drives Flink ingest duration and cross-AZ replication volume.">ⓘ</span>
+                        </label>
+                        <input type="number" id="change-rate" step="0.1" value="0.5">
                     </div>
                     <div class="input-group">
-                        <label for="warm-retention">Warm Tier Retention (Days)</label>
-                        <input type="number" id="warm-retention" value="365">
-                    </div>
-                    <div class="input-group">
-                        <label for="iceberg-retention">Iceberg Retention (Days)</label>
-                        <input type="number" id="iceberg-retention" value="365">
+                        <label for="retention">
+                            Retention (days)
+                            <span class="info-tip" title="Single retention slider — applies to fs_md, audit log rollup index, and history snapshots.">ⓘ</span>
+                        </label>
+                        <input type="number" id="retention" value="365">
                     </div>
                 </div>
 
                 <div class="button-group">
                     <button id="calculate-btn" class="btn btn-primary">Calculate Costs</button>
                     <button id="toggle-advanced-btn" class="btn btn-secondary">Advanced Configuration</button>
-                    <button id="view-aws-costs-btn" class="btn btn-success">View AWS Costs</button>
                 </div>
 
-                <!-- Advanced Configuration Section -->
                 <div id="advanced-config">
-                    <div class="card">
+                    <div class="card" style="margin-top: 1.5rem;">
                         <h2>Advanced Configuration</h2>
-                        <div class="input-grid">
-                            <div class="input-group">
-                                <label for="metadata-size">Metadata Record Size (KB)</label>
-                                <input type="number" id="metadata-size" step="0.1" value="0.5">
+
+                        <div class="advanced-section">
+                            <h3>Storage / Sizing Constants</h3>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="state-per-file">Flink state per file (KB)</label>
+                                    <input type="number" id="state-per-file" step="0.05" value="0.5">
+                                </div>
+                                <div class="input-group">
+                                    <label for="folder-ratio">Folder ratio (% of total nodes)</label>
+                                    <input type="number" id="folder-ratio" step="0.1" value="2">
+                                </div>
+                                <div class="input-group">
+                                    <label for="md-record-size">Metadata record size (KB)</label>
+                                    <input type="number" id="md-record-size" step="0.1" value="0.5">
+                                </div>
+                                <div class="input-group">
+                                    <label for="snap-record-size">Snapshot record size (KB)</label>
+                                    <input type="number" id="snap-record-size" step="0.1" value="1.0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="audit-rate">Audit rollup rows per file/day</label>
+                                    <input type="number" id="audit-rate" step="0.001" value="0.012">
+                                </div>
+                                <div class="input-group">
+                                    <label for="audit-record-size">Audit rollup record size (bytes)</label>
+                                    <input type="number" id="audit-record-size" step="10" value="100">
+                                </div>
+                                <div class="input-group">
+                                    <label for="replicas">OpenSearch replica count</label>
+                                    <input type="number" id="replicas" value="1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="overhead-multiplier">Indexing overhead multiplier</label>
+                                    <input type="number" id="overhead-multiplier" step="0.05" value="1.3">
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label for="audit-events">Audit Log Events per Change</label>
-                                <input type="number" id="audit-events" value="3">
+                        </div>
+
+                        <div class="advanced-section">
+                            <h3>Flink Sizing</h3>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="flink-duty-cycle">Flink duty cycle (%)</label>
+                                    <input type="number" id="flink-duty-cycle" step="1" value="33">
+                                </div>
+                                <div class="input-group">
+                                    <label for="flink-nvme-usage">Usable state per TM (% of NVMe)</label>
+                                    <input type="number" id="flink-nvme-usage" step="1" value="85">
+                                </div>
+                                <div class="input-group">
+                                    <label for="flink-min-tms">Minimum metadata TMs</label>
+                                    <input type="number" id="flink-min-tms" value="2">
+                                </div>
                             </div>
-                            <div class="input-group">
-                                <label for="audit-size">Audit Log Record Size (KB)</label>
-                                <input type="number" id="audit-size" step="0.05" value="0.25">
-                            </div>
-                            <div class="input-group">
-                                <label for="change-rate">Daily Change Rate (%)</label>
-                                <input type="number" id="change-rate" step="0.1" value="0.5">
-                            </div>
-                            <div class="input-group">
-                                <label for="replica-count">OpenSearch Replica Count (Hot)</label>
-                                <input type="number" id="replica-count" value="1">
-                            </div>
-                            <div class="input-group">
-                                <label for="athena-scan-percent">Athena Query Scan (%)</label>
-                                <input type="number" id="athena-scan-percent" step="0.1" value="5">
+                        </div>
+
+                        <div class="advanced-section">
+                            <h3>Cluster Sizing</h3>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="os-data-nodes">OpenSearch data nodes</label>
+                                    <input type="number" id="os-data-nodes" value="3">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-nodes">Application nodes</label>
+                                    <input type="number" id="app-nodes" value="3">
+                                </div>
+                                <div class="input-group">
+                                    <label for="git-pvc">Git + Artifact PVC (GB)</label>
+                                    <input type="number" id="git-pvc" value="300">
+                                </div>
+                                <div class="input-group">
+                                    <label for="num-lbs">Internal load balancers</label>
+                                    <input type="number" id="num-lbs" value="2">
+                                </div>
+                                <div class="input-group">
+                                    <label for="egress-gb">Estimated egress (GB/month)</label>
+                                    <input type="number" id="egress-gb" value="50">
+                                </div>
+                                <div class="input-group">
+                                    <label for="num-secrets">Secrets / Key Vault items</label>
+                                    <input type="number" id="num-secrets" value="10">
+                                </div>
+                                <div class="input-group">
+                                    <label for="num-kms-keys">KMS / Key Vault keys</label>
+                                    <input type="number" id="num-kms-keys" value="2">
+                                </div>
+                                <div class="input-group">
+                                    <label for="logs-flat">Logs / metrics flat ($/mo)</label>
+                                    <input type="number" id="logs-flat" value="20">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Results Section -->
             <div class="card" id="results-card">
-                <h2>2. Cost Analysis</h2>
-                <p>Click on a row for a detailed cost breakdown.</p>
+                <h2>2. Cost Estimate</h2>
+
+                <div id="warning-container"></div>
+
+                <div class="results-summary">
+                    <div class="summary-tile">
+                        <div class="label">Monthly</div>
+                        <div class="value" id="total-monthly">$0</div>
+                    </div>
+                    <div class="summary-tile">
+                        <div class="label">1 Year</div>
+                        <div class="value" id="total-1y">$0</div>
+                    </div>
+                    <div class="summary-tile">
+                        <div class="label">3 Years</div>
+                        <div class="value" id="total-3y">$0</div>
+                    </div>
+                </div>
+
+                <div class="info-note">
+                    Click any category row below for detailed cost breakdown and formulas.
+                </div>
+
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Architecture</th>
-                            <th>Monthly Cost</th>
-                            <th>3-Year Total Cost</th>
+                            <th>Category</th>
+                            <th class="amount">Monthly</th>
+                            <th class="amount">% of Total</th>
                         </tr>
                     </thead>
-                    <tbody id="results-tbody">
-                        <tr data-architecture="os">
-                            <td>OpenSearch Only <span class="disclaimer" id="os-disclaimer-btn">ⓘ</span></td>
-                            <td id="os-monthly">$0</td>
-                            <td id="os-3year">$0</td>
+                    <tbody id="results-tbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Total</td>
+                            <td class="amount" id="footer-monthly">$0</td>
+                            <td class="amount">100%</td>
                         </tr>
-                        <tr data-architecture="iceberg">
-                            <td>Iceberg + Athena <span class="disclaimer" id="iceberg-disclaimer-btn">ⓘ</span></td>
-                            <td id="iceberg-monthly">$0</td>
-                            <td id="iceberg-3year">$0</td>
-                        </tr>
-                        <tr data-architecture="hybrid">
-                            <td>Hybrid (Both)</td>
-                            <td id="hybrid-monthly">$0</td>
-                            <td id="hybrid-3year">$0</td>
-                        </tr>
-                    </tbody>
+                    </tfoot>
                 </table>
-                 <div class="button-group">
-                    <button id="export-btn" class="btn btn-secondary">Export to Sheets (CSV)</button>
-                    <button id="export-pdf-btn" class="btn btn-secondary">Export to PDF</button>
+
+                <div class="scope-note">
+                    <strong>Out of scope:</strong> The agent service requires a customer-supplied API key and LLM provider.
+                    Token consumption is usage-based, not deployment-size driven, and is excluded from this estimate.
+                </div>
+
+                <div class="button-group">
+                    <button id="export-bom-btn" class="btn btn-success">Export BoM (CSV)</button>
+                    <button id="export-pdf-btn" class="btn btn-secondary">Export PDF</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- AWS Costs Modal -->
-    <div id="aws-costs-modal" class="modal">
+    <div id="info-modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" id="close-aws-modal">&times;</span>
-            <h2>AWS Resource Costs</h2>
-            <p>The following costs are used in the calculations. These are based on us-east-1 region and may vary.</p>
-            <div id="aws-costs-container"></div>
-        </div>
-    </div>
+            <span class="close-btn" data-close="info-modal">&times;</span>
+            <h2>Cost Model Overview</h2>
+            <p>This calculator estimates the customer's cloud infrastructure cost for a CTERA Insight BYOC deployment - a single workload cluster running a single tenant in the customer's AWS or Azure subscription.</p>
 
-    <!-- OS Disclaimer Modal -->
-    <div id="os-disclaimer-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-os-disclaimer-modal">&times;</span>
-            <h2>OpenSearch Only Retention</h2>
-            <p>The "OpenSearch Only" architecture retains data only for the duration specified in the Hot and Warm tier retention periods. The 3-year cost reflects running this architecture continuously, but it does not imply 3 years of data retention. Long-term archival is not part of this specific configuration.</p>
-        </div>
-    </div>
-
-    <!-- Iceberg Disclaimer Modal -->
-    <div id="iceberg-disclaimer-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-iceberg-disclaimer-modal">&times;</span>
-            <h2>Iceberg Storage Cost Calculation</h2>
-            <p>The storage for the Iceberg + Athena architecture grows every single day until it reaches the end of its retention period (e.g., 3 years).</p>
-            <p>This calculation is based on the <strong>total storage volume at the end of the retention period</strong>. The resulting monthly cost represents the "steady-state" or "peak" cost you will pay once the archive is fully mature.</p>
-            <p><strong>Formula:</strong> Peak Storage = (Initial Size) + (Total Growth over Period)</p>
-            <p>This method is useful for understanding the maximum budget required for the storage component once it is fully scaled.</p>
-        </div>
-    </div>
-
-    <!-- Main Info Modal -->
-    <div id="main-info-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-main-info-modal">&times;</span>
-            <h2>Cost Model Calculation Explained</h2>
-            <p>This document details the logic behind the Cloud Data Architecture Cost Calculator. The model is designed to provide a dynamic and transparent cost estimation for three different data architectures.</p>
-
-            <h3>Core Calculation Principles</h3>
-            <ol>
-                <li><strong>Data Volume Sizing:</strong> The calculation starts by determining the daily data ingest volume based on the number of files and the daily change rate. For the Hot and Warm tiers, it calculates a "steady-state" volume capped by the retention period, not an ever-growing total.</li>
-                <li><strong>Dynamic Node Sizing:</strong> A key feature is the dynamic selection of OpenSearch EC2 instance types (m6g.large, xlarge, 2xlarge) based on the calculated storage requirements for the Hot and Warm tiers. This ensures cost-effectiveness by avoiding over-provisioning.</li>
-                <li><strong>Replica-Aware Hot Tier Costs:</strong> The model explicitly accounts for OpenSearch replicas in the Hot Tier. Both storage and compute costs for the hot tier are scaled based on the replica count, ensuring that the costs for data redundancy and high availability are accurately reflected.</li>
-                <li><strong>Peak Iceberg Storage Cost:</strong> For the Iceberg architecture, storage grows daily. This model calculates the cost based on the <strong>total storage volume at the end of the retention period</strong>. This provides a "peak cost" or "steady-state" monthly figure, representing the cost you will pay once the archive is fully mature.</li>
-                <li><strong>Fixed Infrastructure Cost:</strong> A fixed monthly cost of $400 is added to all architectures to account for essential, shared services such as ECS, management EC2 instances, and RDS that are required regardless of data volume.</li>
-            </ol>
-
-            <h3>Key Configuration Parameters</h3>
-            <p>The model's accuracy depends on several configurable inputs available in the "Advanced Configuration" section:</p>
+            <h3>What's Modeled</h3>
             <ul>
-                <li><strong>Metadata & Audit Log Sizes:</strong> These determine the fundamental size of the data being ingested.</li>
-                <li><strong>Daily Change Rate (%):</strong> This directly impacts the daily ingest volume and, consequently, the size of the steady-state Hot/Warm tiers and the growth rate of the Iceberg archive.</li>
-                <li><strong>OpenSearch Replica Count:</strong> This directly impacts the compute and storage costs of the Hot Tier.</li>
-                <li><strong>Athena Query Scan (%):</strong> This allows you to customize the assumed data scan size for Athena queries, directly influencing the query costs in the Iceberg and Hybrid models.</li>
+                <li><strong>Workload cluster:</strong> EKS/AKS control plane, OpenSearch (3 master + N data nodes), application nodes (Atlantis, Backoffice, ArgoCD, Argo Workflows, insight-ui, agent-service, self-hosted Git, self-hosted artifact registry), Flink JobManagers (always-on) and metadata TaskManagers (scale-to-zero, hourly runs).</li>
+                <li><strong>Storage:</strong> EBS gp3 / Premium SSD v2 for OpenSearch data nodes (sized from retention), application-node PVCs for Git + artifact repo, S3 / Blob Hot for input bucket and Flink checkpoints.</li>
+                <li><strong>Network:</strong> Internal load balancers, NAT Gateway, cross-AZ OpenSearch replication (when 3-AZ enabled), egress, DNS.</li>
+                <li><strong>Managed services:</strong> Secrets Manager / Key Vault, KMS / Key Vault keys, CloudWatch / Log Analytics.</li>
             </ul>
-             <h3>Architecture Cost Breakdown</h3>
+
+            <h3>Key Sizing Formulas</h3>
             <ul>
-                <li><strong>OpenSearch Only:</strong> Cost includes EMR ingestion, OpenSearch Hot (compute + storage, including replicas), and Warm (compute + S3 storage) tiers, plus a fixed infrastructure cost. Retention is limited to the Hot + Warm periods.</li>
-                <li><strong>Iceberg + Athena:</strong> Cost includes EMR ingestion, the peak cost of S3 storage for the long-term archive, the projected cost of Athena queries, and a fixed infrastructure cost.</li>
-                <li><strong>Hybrid (Both):</strong> This is the most comprehensive and costly option, summing all components from both the OpenSearch Only and Iceberg + Athena architectures.</li>
+                <li><strong>Flink metadata TMs</strong> = max(min, ceil(state_GB / (NVMe × 85%))), where state_GB = files × 0.5 KB.</li>
+                <li><strong>OpenSearch storage</strong> = (fs_md + audit_rollup + folder_snapshots) × (1 + replicas) × 1.3 indexing overhead, divided across data nodes.</li>
+                <li><strong>Audit log volume</strong> = files × 0.012 rollup rows/day. Only rolled-up records are stored; raw events are out of scope for OS sizing.</li>
+                <li><strong>Folder snapshots</strong> = (files × 2%) × 1 KB/day × retention.</li>
+                <li><strong>Cross-AZ replication</strong> applies only in 3-AZ deployments and is calculated from daily ingest volume × replicas.</li>
             </ul>
+
+            <h3>Out of Scope</h3>
+            <ul>
+                <li>LLM token costs for the agent service (customer-supplied API key, usage-based).</li>
+                <li>Initial sync ("INIT phase") burst capacity. The model estimates steady-state BAU costs.</li>
+                <li>Customer-side network costs outside the cluster (corporate egress to the platform, etc.).</li>
+            </ul>
+
+            <h3>Pricing</h3>
+            <p>All rates are <strong>on-demand list prices</strong> as published by AWS us-east-1 and Azure East US at the time the calculator was built. Customers should apply their contracted, Reserved Instance, or Savings Plan discounts to the exported BoM.</p>
         </div>
     </div>
 
-    <!-- Cost Breakdown Modal -->
+    <div id="prices-modal" class="modal">
+        <div class="modal-content wide">
+            <span class="close-btn" data-close="prices-modal">&times;</span>
+            <h2 id="prices-title">List Prices</h2>
+            <p>On-demand list prices. Edit values to model alternative pricing scenarios. Changes take effect on the next "Calculate Costs" run.</p>
+            <div id="prices-content"></div>
+            <div class="button-group">
+                <button class="btn btn-secondary" id="reset-prices-btn">Reset to defaults</button>
+            </div>
+        </div>
+    </div>
+
     <div id="breakdown-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-breakdown-modal">&times;</span>
-            <h2 id="breakdown-title">Cost Breakdown</h2>
+        <div class="modal-content wide">
+            <span class="close-btn" data-close="breakdown-modal">&times;</span>
+            <h2 id="breakdown-title">Breakdown</h2>
             <div id="breakdown-content"></div>
         </div>
     </div>
-    
-    <!-- PDF Export Options Modal -->
-    <div id="export-options-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="close-export-options-modal">&times;</span>
-            <h2>Select Architectures for PDF Export</h2>
-            <div class="input-group">
-                <label><input type="checkbox" id="export-os" value="os" checked> OpenSearch Only</label>
-                <label><input type="checkbox" id="export-iceberg" value="iceberg" checked> Iceberg + Athena</label>
-                <label><input type="checkbox" id="export-hybrid" value="hybrid" checked> Hybrid (Both)</label>
-            </div>
-            <div class="button-group">
-                <button id="generate-pdf-btn" class="btn btn-primary">Generate PDF</button>
-            </div>
-        </div>
-    </div>
-
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // --- DOM Element References ---
-            const calculateBtn = document.getElementById('calculate-btn');
-            const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
-            const viewAwsCostsBtn = document.getElementById('view-aws-costs-btn');
-            const infoBtn = document.getElementById('info-btn');
-            const advancedConfig = document.getElementById('advanced-config');
-            const resultsCard = document.getElementById('results-card');
-            const exportBtn = document.getElementById('export-btn');
-            const exportPdfBtn = document.getElementById('export-pdf-btn');
-            const resultsTbody = document.getElementById('results-tbody');
-
-            // --- Modal Elements ---
-            const awsCostsModal = document.getElementById('aws-costs-modal');
-            const closeAwsModalBtn = document.getElementById('close-aws-modal');
-            const osDisclaimerModal = document.getElementById('os-disclaimer-modal');
-            const osDisclaimerBtn = document.getElementById('os-disclaimer-btn');
-            const closeOsDisclaimerModalBtn = document.getElementById('close-os-disclaimer-modal');
-            const icebergDisclaimerModal = document.getElementById('iceberg-disclaimer-modal');
-            const icebergDisclaimerBtn = document.getElementById('iceberg-disclaimer-btn');
-            const closeIcebergDisclaimerModalBtn = document.getElementById('close-iceberg-disclaimer-modal');
-            const mainInfoModal = document.getElementById('main-info-modal');
-            const closeMainInfoModalBtn = document.getElementById('close-main-info-modal');
-            const breakdownModal = document.getElementById('breakdown-modal');
-            const closeBreakdownModalBtn = document.getElementById('close-breakdown-modal');
-            const breakdownTitle = document.getElementById('breakdown-title');
-            const breakdownContent = document.getElementById('breakdown-content');
-            const exportOptionsModal = document.getElementById('export-options-modal');
-            const closeExportOptionsModalBtn = document.getElementById('close-export-options-modal');
-            const generatePdfBtn = document.getElementById('generate-pdf-btn');
-
-
-            // --- Global Variables ---
-            const awsCosts = {
-                emrServerless: { costPerBillionFiles: 13.88 },
-                ec2: { 'm6g.large': 0.128, 'm6g.xlarge': 0.256, 'm6g.2xlarge': 0.512 },
-                storage: { ebsGp3: 0.08, s3Standard: 0.023 },
-                athena: { perTBScanned: 5.00 }
+    document.addEventListener('DOMContentLoaded', function () {
+        // ===== CTERA Logo (loaded from images/ for PDF) =====
+        let logoBase64 = null;
+        (function() {
+            const img = new Image();
+            img.onload = function() {
+                const scale = 3;
+                const canvas = document.createElement('canvas');
+                canvas.width = 108 * scale;
+                canvas.height = 50 * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
+                ctx.drawImage(img, 0, 0);
+                logoBase64 = canvas.toDataURL('image/png');
             };
-            let calculationDetails = {};
-            let inputValues = {};
-            
-            // --- Helper Functions ---
-            const parseFileCount = (input) => {
-                const value = input.trim().toLowerCase();
-                const num = parseFloat(value);
-                if (isNaN(num)) return 0;
-                if (value.endsWith('b')) return num * 1e9;
-                if (value.endsWith('m')) return num * 1e6;
-                return num;
-            };
+            // Load cleanly from the images directory
+            img.src = 'images/ctera_logo_dark.svg';
+        })();
 
-            const formatCurrency = (value, fractionDigits = 2) => {
-                const minDigits = fractionDigits > 2 ? fractionDigits : 2;
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: minDigits,
-                    maximumFractionDigits: minDigits
-                }).format(value);
-            };
-
-            const formatNumber = (value, fractionDigits = 2) => {
-                if (typeof value !== 'number' || isNaN(value)) {
-                    return 'N/A';
-                }
-                return value.toLocaleString('en-US', {
-                    minimumFractionDigits: fractionDigits,
-                    maximumFractionDigits: fractionDigits
-                });
-            };
-
-            // --- Core Calculation Logic ---
-            function runCalculations() {
-                // Step 1: Gather Inputs
-                 inputValues = {
-                    numberOfFiles: parseFileCount(document.getElementById('num-files').value),
-                    hotTierDays: parseFloat(document.getElementById('hot-retention').value),
-                    warmTierDays: parseFloat(document.getElementById('warm-retention').value),
-                    icebergRetentionDays: parseFloat(document.getElementById('iceberg-retention').value),
-                    metadataRecordSizeKB: parseFloat(document.getElementById('metadata-size').value),
-                    auditLogEventsPerChange: parseFloat(document.getElementById('audit-events').value),
-                    auditLogRecordSizeKB: parseFloat(document.getElementById('audit-size').value),
-                    dailyChangeRatePercent: parseFloat(document.getElementById('change-rate').value),
-                    replicaCount: parseFloat(document.getElementById('replica-count').value),
-                    athenaScanPercent: parseFloat(document.getElementById('athena-scan-percent').value),
-                };
-
-                // Step A: Data Volume Sizing
-                const totalMetadataSizeGB = (inputValues.numberOfFiles * inputValues.metadataRecordSizeKB) / (1024 * 1024);
-                const dailyChangedFiles = inputValues.numberOfFiles * (inputValues.dailyChangeRatePercent / 100);
-                const dailyMetadataIngestGB = (dailyChangedFiles * inputValues.metadataRecordSizeKB) / (1024 * 1024);
-                const dailyAuditLogIngestGB = (dailyChangedFiles * inputValues.auditLogEventsPerChange * inputValues.auditLogRecordSizeKB) / (1024 * 1024);
-                const totalDailyIngestGB = dailyMetadataIngestGB + dailyAuditLogIngestGB;
-                const maxHotDataGB = totalDailyIngestGB * inputValues.hotTierDays;
-                const maxWarmDataGB = totalDailyIngestGB * inputValues.warmTierDays;
-                const icebergTotalStorageGB = totalMetadataSizeGB + (totalDailyIngestGB * inputValues.icebergRetentionDays);
-                
-                calculationDetails.volume = {
-                    totalMetadataSizeGB, dailyChangedFiles, dailyMetadataIngestGB,
-                    dailyAuditLogIngestGB, totalDailyIngestGB, maxHotDataGB, maxWarmDataGB,
-                    icebergTotalStorageGB // Added for breakdown
-                };
-
-                // Step B: Dynamic OpenSearch Node Sizing
-                // Hot Tier
-                const hotStorageWithReplicasGB = maxHotDataGB * (1 + inputValues.replicaCount);
-                let hotInstanceType;
-                if (hotStorageWithReplicasGB < 200) hotInstanceType = 'm6g.large';
-                else if (hotStorageWithReplicasGB <= 1000) hotInstanceType = 'm6g.xlarge';
-                else hotInstanceType = 'm6g.2xlarge';
-                const hotNodeCount = Math.max(2, Math.ceil(hotStorageWithReplicasGB / 500));
-
-                // Warm Tier
-                const warmStorageGB = maxWarmDataGB;
-                let warmInstanceType;
-                if (warmStorageGB < 5000) warmInstanceType = 'm6g.large';
-                else warmInstanceType = 'm6g.xlarge';
-                const warmNodeCount = Math.max(2, Math.ceil(warmStorageGB / 4000));
-                
-                calculationDetails.sizing = {
-                    hotStorageWithReplicasGB, hotInstanceType, hotNodeCount,
-                    warmStorageGB, warmInstanceType, warmNodeCount
-                };
-
-                // Step C: Monthly Cost Component Calculation
-                const fixedInfrastructureCost = 400; // For ECS, EC2, RDS
-                // Ingestion
-                const emrCost = (inputValues.numberOfFiles / 1e9) * awsCosts.emrServerless.costPerBillionFiles * 30.44;
-                // OS Hot
-                const hotComputeCost = hotNodeCount * awsCosts.ec2[hotInstanceType] * 24 * 30.44;
-                const hotStorageCost = hotStorageWithReplicasGB * awsCosts.storage.ebsGp3;
-                // OS Warm
-                const warmComputeCost = warmNodeCount * awsCosts.ec2[warmInstanceType] * 24 * 30.44;
-                const warmStorageS3Cost = warmStorageGB * awsCosts.storage.s3Standard;
-                // Iceberg Archive (Using PEAK/TOTAL cost)
-                const icebergStorageCost = icebergTotalStorageGB * awsCosts.storage.s3Standard;
-                // Athena (Using PEAK/TOTAL cost)
-                const athenaQueryCost = (icebergTotalStorageGB / 1024) * (inputValues.athenaScanPercent / 100) * 200 * awsCosts.athena.perTBScanned;
-
-                calculationDetails.costs = {
-                     emrCost, hotComputeCost, hotStorageCost, warmComputeCost,
-                     warmStorageS3Cost, icebergStorageCost, athenaQueryCost,
-                     fixedInfrastructureCost
-                };
-
-                // Step D: Aggregate Costs for Each Architecture
-                const osMonthly = emrCost + hotComputeCost + hotStorageCost + warmComputeCost + warmStorageS3Cost + fixedInfrastructureCost;
-                const icebergMonthly = emrCost + icebergStorageCost + athenaQueryCost + fixedInfrastructureCost;
-                const hybridMonthly = osMonthly + icebergStorageCost + athenaQueryCost;
-
-                // Display Results
-                document.getElementById('os-monthly').textContent = formatCurrency(osMonthly);
-                document.getElementById('os-3year').textContent = formatCurrency(osMonthly * 36);
-                document.getElementById('iceberg-monthly').textContent = formatCurrency(icebergMonthly);
-                document.getElementById('iceberg-3year').textContent = formatCurrency(icebergMonthly * 36);
-                document.getElementById('hybrid-monthly').textContent = formatCurrency(hybridMonthly);
-                document.getElementById('hybrid-3year').textContent = formatCurrency(hybridMonthly * 36);
-
-                resultsCard.style.display = 'block';
+        // ===== Default list prices =====
+        const DEFAULT_PRICES = {
+            aws: {
+                k8sControlPlaneHr: 0.10,
+                osMasterHr: 0.0376,        // t4g.medium
+                osDataHr:   0.1632,        // m7g.xlarge
+                appNodeHr:  0.1632,        // m7g.xlarge
+                flinkTmHr:  0.1068,        // m7gd.large
+                flinkTmNvmeGB: 118,        // local NVMe
+                ebsGB:      0.08,          // gp3
+                blockGB:    0.08,          // app/master block
+                objectGB:   0.023,         // S3 Standard
+                lbMo:       22.50,         // internal ALB
+                natHr:      0.045,         // NAT GW
+                natGB:      0.045,         // NAT data processing
+                egressGB:   0.09,          // internet egress
+                crossAzGB:  0.02,          // both directions
+                dnsZoneMo:  0.50,
+                secretMo:   0.40,
+                kmsKeyMo:   1.00,
+                osMasterLabel: 't4g.medium',
+                osDataLabel: 'm7g.xlarge',
+                appNodeLabel: 'm7g.xlarge',
+                flinkTmLabel: 'm7gd.large (118 GB NVMe)',
+                blockLabel: 'EBS gp3',
+                objectLabel: 'S3 Standard',
+                lbLabel: 'Internal ALB',
+                dnsLabel: 'Route53 hosted zone',
+                secretsLabel: 'Secrets Manager',
+                kmsLabel: 'KMS key',
+                logsLabel: 'CloudWatch Logs/Metrics',
+                k8sLabel: 'EKS control plane'
+            },
+            azure: {
+                k8sControlPlaneHr: 0.10,
+                osMasterHr: 0.068,         // D2pls_v5
+                osDataHr:   0.181,         // D4pds_v5
+                appNodeHr:  0.181,         // D4pds_v5
+                flinkTmHr:  0.20,          // D4ds_v5
+                flinkTmNvmeGB: 150,        // local SSD
+                ebsGB:      0.075,         // Premium SSD v2
+                blockGB:    0.075,
+                objectGB:   0.018,         // Blob Hot
+                lbMo:       22.00,         // Standard LB
+                natHr:      0.045,
+                natGB:      0.045,
+                egressGB:   0.087,
+                crossAzGB:  0.01,          // outbound only
+                dnsZoneMo:  0.50,
+                secretMo:   0.50,          // ~$5/mo per vault, treated as flat 10 secrets
+                kmsKeyMo:   1.00,
+                osMasterLabel: 'D2pls_v5',
+                osDataLabel: 'D4pds_v5',
+                appNodeLabel: 'D4pds_v5',
+                flinkTmLabel: 'D4ds_v5 (150 GB local SSD)',
+                blockLabel: 'Premium SSD v2',
+                objectLabel: 'Blob Hot',
+                lbLabel: 'Standard Load Balancer',
+                dnsLabel: 'Azure DNS zone',
+                secretsLabel: 'Key Vault secret',
+                kmsLabel: 'Key Vault key',
+                logsLabel: 'Azure Monitor / Log Analytics',
+                k8sLabel: 'AKS control plane (Standard)'
             }
+        };
+
+        // Working copy (editable via prices modal)
+        let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+
+        // ===== Scale Profiles =====
+        const SCALE_CONFIGS = {
+            large: {
+                aws: { osDataHr: 0.1632, appNodeHr: 0.1632, osDataLabel: 'm7g.xlarge', appNodeLabel: 'm7g.xlarge' },
+                azure: { osDataHr: 0.181, appNodeHr: 0.181, osDataLabel: 'D4pds_v5', appNodeLabel: 'D4pds_v5' },
+                overhead: 1.3,
+                minTms: 2,
+                numLbs: 2
+            },
+            standard: {
+                aws: { osDataHr: 0.0816, appNodeHr: 0.0816, osDataLabel: 'm7g.large', appNodeLabel: 'm7g.large' },
+                azure: { osDataHr: 0.0904, appNodeHr: 0.0904, osDataLabel: 'D2pds_v5', appNodeLabel: 'D2pds_v5' },
+                overhead: 1.15,
+                minTms: 1,
+                numLbs: 1
+            }
+        };
+
+        // ===== State =====
+        let selectedCloud = 'aws';
+        let selectedScale = 'large';
+        let lastCalc = null;
+
+        // ===== Helpers =====
+        const HOURS_PER_MONTH = 730;
+        const DAYS_PER_MONTH = 30.44;
+        const KB = 1024;
+        const MB = 1024 * 1024;
+        const GB = 1024 * 1024 * 1024;
+
+        const parseFileCount = (v) => {
+            const s = String(v).trim().toLowerCase();
+            const n = parseFloat(s);
+            if (isNaN(n)) return 0;
+            if (s.endsWith('b')) return n * 1e9;
+            if (s.endsWith('m')) return n * 1e6;
+            if (s.endsWith('k')) return n * 1e3;
+            return n;
+        };
+
+        const fmt$ = (v, d = 2) => new Intl.NumberFormat('en-US', {
+            style: 'currency', currency: 'USD',
+            minimumFractionDigits: d, maximumFractionDigits: d
+        }).format(v || 0);
+
+        const fmtN = (v, d = 0) => {
+            if (typeof v !== 'number' || isNaN(v)) return '-';
+            return v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+        };
+
+        const fmtGB = (gb) => {
+            if (gb >= 1024) return (gb / 1024).toFixed(2) + ' TiB';
+            return fmtN(gb, gb < 10 ? 2 : 0) + ' GiB';
+        };
+
+        const ceil100 = (v) => Math.max(100, Math.ceil(v / 100) * 100);
+
+        // ===== DOM refs =====
+        const calculateBtn = document.getElementById('calculate-btn');
+        const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
+        const advancedConfig = document.getElementById('advanced-config');
+        const resultsCard = document.getElementById('results-card');
+        const cloudToggle = document.getElementById('cloud-toggle');
+        const scaleToggle = document.getElementById('scale-toggle');
+        const resultsTbody = document.getElementById('results-tbody');
+        const warningContainer = document.getElementById('warning-container');
+
+        // ===== Toggle handlers =====
+        cloudToggle.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            cloudToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedCloud = btn.dataset.cloud;
+            if (lastCalc) runCalculations();
+        });
+
+        function applyScaleConfig() {
+            const config = SCALE_CONFIGS[selectedScale];
             
-            // --- Modal Display Logic ---
-            function showBreakdownModal(architecture) {
-                const { volume, sizing, costs } = calculationDetails;
-                let title = '';
-                let components = [];
+            // Update prices working copy
+            prices.aws.osDataHr = config.aws.osDataHr;
+            prices.aws.appNodeHr = config.aws.appNodeHr;
+            prices.aws.osDataLabel = config.aws.osDataLabel;
+            prices.aws.appNodeLabel = config.aws.appNodeLabel;
 
-                const emrComponent = {
-                    name: 'EMR Serverless Ingestion',
-                    cost: costs.emrCost,
-                    formula: 'Cost for ingesting the initial batch of files, plus daily changes.',
-                    details: `(${formatNumber(inputValues.numberOfFiles / 1e9, 2)}B files / 1B) * ${formatCurrency(awsCosts.emrServerless.costPerBillionFiles)} * 30.44 days`
-                };
-                const hotComputeComponent = {
-                    name: `OpenSearch Hot Compute (${sizing.hotNodeCount} x ${sizing.hotInstanceType})`,
-                    cost: costs.hotComputeCost,
-                    formula: 'Node Count * Hourly Price * 24 * 30.44',
-                    details: `${sizing.hotNodeCount} nodes * ${formatCurrency(awsCosts.ec2[sizing.hotInstanceType], 3)}/hr * 24 hrs * 30.44 days`
-                };
-                const hotStorageComponent = {
-                    name: 'OpenSearch Hot Storage (EBS GP3)',
-                    cost: costs.hotStorageCost,
-                    formula: 'Hot Data GB (with replicas) * EBS Price/GB',
-                    details: `${formatNumber(sizing.hotStorageWithReplicasGB)} GB * ${formatCurrency(awsCosts.storage.ebsGp3)}/GB`
-                };
-                const warmComputeComponent = {
-                    name: `OpenSearch Warm Compute (${sizing.warmNodeCount} x ${sizing.warmInstanceType})`,
-                    cost: costs.warmComputeCost,
-                    formula: 'Node Count * Hourly Price * 24 * 30.44',
-                    details: `${sizing.warmNodeCount} nodes * ${formatCurrency(awsCosts.ec2[sizing.warmInstanceType], 3)}/hr * 24 hrs * 30.44 days`
-                };
-                const warmS3Component = {
-                    name: 'OpenSearch Warm Storage (S3)',
-                    cost: costs.warmStorageS3Cost,
-                    formula: 'Warm Data GB * S3 Price/GB',
-                    details: `${formatNumber(sizing.warmStorageGB)} GB * ${formatCurrency(awsCosts.storage.s3Standard)}/GB`
-                };
-                const icebergStorageComponent = {
-                    name: 'Iceberg Archive Storage (S3)',
-                    cost: costs.icebergStorageCost,
-                    formula: 'Peak Archive GB * S3 Price/GB',
-                    details: `${formatNumber(volume.icebergTotalStorageGB)} GB (peak) * ${formatCurrency(awsCosts.storage.s3Standard)}/GB`
-                };
-                const athenaComponent = {
-                    name: 'Athena Query Cost',
-                    cost: costs.athenaQueryCost,
-                    formula: '(Peak Archive TB * Scan %) * Queries/mo * Price/TB',
-                    details: `(${formatNumber(volume.icebergTotalStorageGB / 1024, 2)} TB * ${inputValues.athenaScanPercent}%) * 200 queries * ${formatCurrency(awsCosts.athena.perTBScanned)}/TB`
-                };
-                const fixedInfraComponent = {
-                    name: 'Fixed Infrastructure Cost',
-                    cost: costs.fixedInfrastructureCost,
-                    formula: 'Fixed monthly cost for essential shared services.',
-                    details: `Flat rate for ECS, management EC2, and RDS infrastructure: ${formatCurrency(400)}`
-                };
+            prices.azure.osDataHr = config.azure.osDataHr;
+            prices.azure.appNodeHr = config.azure.appNodeHr;
+            prices.azure.osDataLabel = config.azure.osDataLabel;
+            prices.azure.appNodeLabel = config.azure.appNodeLabel;
 
-                if (architecture === 'os') {
-                    title = 'OpenSearch Only Breakdown';
-                    components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, fixedInfraComponent];
-                } else if (architecture === 'iceberg') {
-                    title = 'Iceberg + Athena Breakdown';
-                    components = [emrComponent, icebergStorageComponent, athenaComponent, fixedInfraComponent];
-                } else {
-                    title = 'Hybrid Breakdown';
-                    components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, icebergStorageComponent, athenaComponent, fixedInfraComponent];
-                }
-                
-                breakdownTitle.textContent = title;
-                let totalCost = components.reduce((sum, c) => sum + c.cost, 0);
-                
-                let content = '<table class="breakdown-table">';
-                components.forEach(c => {
-                    content += `
-                        <tr class="component-row" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'table-row' ? 'none' : 'table-row'">
-                            <td>${c.name}</td>
-                            <td style="text-align:right;">${formatCurrency(c.cost)}</td>
-                        </tr>
-                        <tr class="detail-row" style="display:none;">
-                            <td colspan="2">
-                                <div class="calculation-detail"><strong>Formula:</strong> ${c.formula}<br><strong>Calculation:</strong> ${c.details}</div>
-                            </td>
-                        </tr>`;
-                });
-                content += `
+            // Update UI inputs
+            document.getElementById('overhead-multiplier').value = config.overhead;
+            document.getElementById('flink-min-tms').value = config.minTms;
+            document.getElementById('num-lbs').value = config.numLbs;
+        }
+
+        scaleToggle.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            scaleToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedScale = btn.dataset.scale;
+            applyScaleConfig();
+            if (lastCalc) runCalculations();
+        });
+
+        toggleAdvancedBtn.addEventListener('click', () => {
+            advancedConfig.classList.toggle('show');
+        });
+
+        // ===== Core calculation =====
+        function gatherInputs() {
+            return {
+                cloud: selectedCloud,
+                az: 3, // Always 3-AZ topology
+                files: parseFileCount(document.getElementById('num-files').value),
+                changeRatePct: parseFloat(document.getElementById('change-rate').value) || 0,
+                retentionDays: parseFloat(document.getElementById('retention').value) || 365,
+                statePerFileKB: parseFloat(document.getElementById('state-per-file').value) || 0.5,
+                folderRatioPct: parseFloat(document.getElementById('folder-ratio').value) || 2,
+                mdRecordSizeKB: parseFloat(document.getElementById('md-record-size').value) || 0.5,
+                snapRecordSizeKB: parseFloat(document.getElementById('snap-record-size').value) || 1.0,
+                auditRate: parseFloat(document.getElementById('audit-rate').value) || 0.012,
+                auditRecordSizeBytes: parseFloat(document.getElementById('audit-record-size').value) || 100,
+                replicas: parseFloat(document.getElementById('replicas').value) || 1,
+                overhead: parseFloat(document.getElementById('overhead-multiplier').value) || 1.3,
+                flinkDutyPct: parseFloat(document.getElementById('flink-duty-cycle').value) || 33,
+                flinkNvmePct: parseFloat(document.getElementById('flink-nvme-usage').value) || 85,
+                flinkMinTms: parseFloat(document.getElementById('flink-min-tms').value) || 2,
+                osDataNodes: parseFloat(document.getElementById('os-data-nodes').value) || 3,
+                appNodes: parseFloat(document.getElementById('app-nodes').value) || 3,
+                gitPvcGB: parseFloat(document.getElementById('git-pvc').value) || 300,
+                numLbs: parseFloat(document.getElementById('num-lbs').value) || 2,
+                egressGB: parseFloat(document.getElementById('egress-gb').value) || 50,
+                numSecrets: parseFloat(document.getElementById('num-secrets').value) || 10,
+                numKmsKeys: parseFloat(document.getElementById('num-kms-keys').value) || 2,
+                logsFlat: parseFloat(document.getElementById('logs-flat').value) || 20
+            };
+        }
+
+        function calculateSizing(I, P) {
+            const folders = I.files * (I.folderRatioPct / 100);
+            const changedFiles = I.files * (I.changeRatePct / 100);
+
+            // Flink metadata state
+            const stateGB = (I.files * I.statePerFileKB) / MB;
+            const usableNvmePerTm = P.flinkTmNvmeGB * (I.flinkNvmePct / 100);
+            const flinkMdTms = Math.max(I.flinkMinTms, Math.ceil(stateGB / usableNvmePerTm));
+            const flinkDutyHrsPerDay = 24 * (I.flinkDutyPct / 100);
+            const flinkMdHrsPerMonth = flinkMdTms * flinkDutyHrsPerDay * DAYS_PER_MONTH;
+
+            // OpenSearch storage components
+            const fsMdGB = (I.files * I.mdRecordSizeKB * 1.2) / MB;
+            const auditRollupPerDay = I.files * I.auditRate;
+            const auditGB = (auditRollupPerDay * I.auditRecordSizeBytes * I.retentionDays) / GB;
+            const snapDailyGB = (folders * I.snapRecordSizeKB) / MB;
+            const snapTotalGB = snapDailyGB * I.retentionDays;
+
+            const rawDataGB = fsMdGB + auditGB + snapTotalGB;
+            const provisionedGB = rawDataGB * (1 + I.replicas) * I.overhead;
+            const diskPerNodeGB = ceil100(provisionedGB / I.osDataNodes);
+
+            // Cross-AZ replication
+            const dailyWritesGB = (changedFiles * I.mdRecordSizeKB) / MB
+                + (auditRollupPerDay * I.auditRecordSizeBytes) / GB
+                + snapDailyGB;
+            const monthlyReplicaGB = (I.az === 3) ? dailyWritesGB * I.replicas * DAYS_PER_MONTH : 0;
+
+            // S3 / Blob (input bucket 90d + Flink checkpoints)
+            const s3InputGB = (changedFiles * 1) * 90 / MB                       // raw md events ~1KB
+                + (auditRollupPerDay * I.auditRecordSizeBytes * 90) / GB         // raw audit input
+                + stateGB * 1.5;                                                 // checkpoints
+
+            return {
+                folders, changedFiles, stateGB, usableNvmePerTm,
+                flinkMdTms, flinkDutyHrsPerDay, flinkMdHrsPerMonth,
+                fsMdGB, auditRollupPerDay, auditGB, snapDailyGB, snapTotalGB,
+                rawDataGB, provisionedGB, diskPerNodeGB,
+                monthlyReplicaGB, s3InputGB
+            };
+        }
+
+        function calculateCosts(I, P, S) {
+            // ----- Compute -----
+            const k8s = P.k8sControlPlaneHr * HOURS_PER_MONTH;
+            const osMaster = 3 * P.osMasterHr * HOURS_PER_MONTH;
+            const osData = I.osDataNodes * P.osDataHr * HOURS_PER_MONTH;
+            const appNode = I.appNodes * P.appNodeHr * HOURS_PER_MONTH;
+            const flinkTm = S.flinkMdHrsPerMonth * P.flinkTmHr;
+            const compute = k8s + osMaster + osData + appNode + flinkTm;
+
+            // ----- Storage -----
+            const osDataDisk = I.osDataNodes * S.diskPerNodeGB * P.ebsGB;
+            const osMasterDisk = 3 * 10 * P.blockGB;          // 10 GiB per master
+            const appPvc = I.gitPvcGB * P.blockGB;
+            const objectStorage = S.s3InputGB * P.objectGB;
+            const storage = osDataDisk + osMasterDisk + appPvc + objectStorage;
+
+            // ----- Network -----
+            const lbs = I.numLbs * P.lbMo;
+            const natBase = P.natHr * HOURS_PER_MONTH;
+            const natData = (I.egressGB + S.s3InputGB / 30) * P.natGB;  // approx
+            const egress = I.egressGB * P.egressGB;
+            const crossAz = S.monthlyReplicaGB * P.crossAzGB;
+            const dns = P.dnsZoneMo;
+            const network = lbs + natBase + natData + egress + crossAz + dns;
+
+            // ----- Managed -----
+            const secrets = I.numSecrets * P.secretMo;
+            const kms = I.numKmsKeys * P.kmsKeyMo;
+            const logs = I.logsFlat;
+            const managed = secrets + kms + logs;
+
+            // ----- Aggregates -----
+            const total = compute + storage + network + managed;
+
+            return {
+                k8s, osMaster, osData, appNode, flinkTm, compute,
+                osDataDisk, osMasterDisk, appPvc, objectStorage, storage,
+                lbs, natBase, natData, egress, crossAz, dns, network,
+                secrets, kms, logs, managed,
+                total
+            };
+        }
+
+        function runCalculations() {
+            const I = gatherInputs();
+            const P = prices[I.cloud];
+            const S = calculateSizing(I, P);
+            const C = calculateCosts(I, P, S);
+
+            lastCalc = { I, P, S, C };
+
+            // Warnings
+            warningContainer.innerHTML = '';
+            const warnings = [];
+            if (S.diskPerNodeGB > 16384) {
+                warnings.push(`<strong>EBS exceeds single-volume max:</strong> Per-node storage of ${fmtGB(S.diskPerNodeGB)} exceeds the 16 TiB limit for a single ${P.blockLabel} volume. Increase the OpenSearch data node count.`);
+            } else if (S.diskPerNodeGB > 8192) {
+                warnings.push(`<strong>Large per-node storage:</strong> Per-node EBS of ${fmtGB(S.diskPerNodeGB)} is large. Consider increasing data node count to spread load and shorten recovery times.`);
+            }
+            if (I.az === 1) {
+                warnings.push(`<strong>1-AZ deployment:</strong> No cross-AZ replication cost is included, but the cluster has no zone-level redundancy. Use 3-AZ for production HA.`);
+            }
+            if (warnings.length) {
+                warningContainer.innerHTML = warnings.map(w => `<div class="warning-banner">${w}</div>`).join('');
+            }
+
+            // Render summary tiles
+            document.getElementById('total-monthly').textContent = fmt$(C.total);
+            document.getElementById('total-1y').textContent = fmt$(C.total * 12);
+            document.getElementById('total-3y').textContent = fmt$(C.total * 36);
+            document.getElementById('footer-monthly').textContent = fmt$(C.total);
+
+            // Render category rows
+            const rows = [
+                { key: 'compute',  label: 'Compute',          cost: C.compute },
+                { key: 'storage',  label: 'Storage',          cost: C.storage },
+                { key: 'network',  label: 'Network',          cost: C.network },
+                { key: 'managed',  label: 'Managed Services', cost: C.managed }
+            ];
+            resultsTbody.innerHTML = rows.map(r => `
+                <tr class="category-row" data-cat="${r.key}">
+                    <td>${r.label}</td>
+                    <td class="amount">${fmt$(r.cost)}</td>
+                    <td class="amount">${C.total ? ((r.cost / C.total) * 100).toFixed(1) + '%' : '-'}</td>
+                </tr>
+            `).join('');
+
+            resultsCard.style.display = 'block';
+        }
+
+        // ===== Build BoM rows (used for breakdown + CSV + PDF) =====
+        function buildBomRows() {
+            if (!lastCalc) return [];
+            const { I, P, S, C } = lastCalc;
+
+            const rows = [];
+
+            // ---- Compute ----
+            rows.push({ cat: 'Compute', service: P.k8sLabel,                 qty: 1,                                   unit: 'mo',     unitPrice: P.k8sControlPlaneHr * HOURS_PER_MONTH,                  monthly: C.k8s,         note: '' });
+            rows.push({ cat: 'Compute', service: `OS master (${P.osMasterLabel})`, qty: 3,                              unit: 'hr×730', unitPrice: P.osMasterHr,                                            monthly: C.osMaster,    note: '' });
+            rows.push({ cat: 'Compute', service: `OS data (${P.osDataLabel})`,    qty: I.osDataNodes,                   unit: 'hr×730', unitPrice: P.osDataHr,                                              monthly: C.osData,      note: '' });
+            rows.push({ cat: 'Compute', service: `App nodes (${P.appNodeLabel})`, qty: I.appNodes,                      unit: 'hr×730', unitPrice: P.appNodeHr,                                             monthly: C.appNode,     note: 'Hosts insight-ui, Atlantis, Backoffice, ArgoCD, agent-service, Git, Artifact, Flink JMs (md + audit)' });
+            rows.push({ cat: 'Compute', service: `Flink metadata TMs (${P.flinkTmLabel})`, qty: S.flinkMdTms,           unit: `hr (~${Math.round(S.flinkDutyHrsPerDay)} h/day × 30.44)`, unitPrice: P.flinkTmHr, monthly: C.flinkTm, note: `${I.flinkDutyPct}% duty cycle, hourly runs ~20 min` });
+
+            // ---- Storage ----
+            rows.push({ cat: 'Storage', service: `OS data ${P.blockLabel}`,        qty: `${I.osDataNodes} × ${S.diskPerNodeGB} GiB`, unit: 'GB-mo', unitPrice: P.ebsGB,    monthly: C.osDataDisk,    note: 'Sized from retention + replicas + overhead' });
+            rows.push({ cat: 'Storage', service: `OS master ${P.blockLabel}`,      qty: '3 × 10 GiB',                                  unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.osMasterDisk,  note: '' });
+            rows.push({ cat: 'Storage', service: `App-node PVC (Git + Artifact)`,  qty: `${I.gitPvcGB} GiB`,                           unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.appPvc,        note: 'Self-hosted Git server + artifact registry' });
+            rows.push({ cat: 'Storage', service: `${P.objectLabel} (input + checkpoints)`, qty: `${fmtGB(S.s3InputGB)}`,                unit: 'GB-mo', unitPrice: P.objectGB, monthly: C.objectStorage, note: 'Input bucket (90 d lifecycle) + Flink S3 checkpoints' });
+
+            // ---- Network ----
+            rows.push({ cat: 'Network', service: P.lbLabel,                                qty: I.numLbs,                       unit: 'mo',  unitPrice: P.lbMo,        monthly: C.lbs,      note: '' });
+            rows.push({ cat: 'Network', service: 'NAT Gateway (base)',                    qty: 1,                              unit: 'mo',  unitPrice: P.natHr * HOURS_PER_MONTH, monthly: C.natBase, note: '' });
+            rows.push({ cat: 'Network', service: 'NAT Gateway (data processing)',         qty: `~${(I.egressGB + S.s3InputGB / 30).toFixed(0)} GB`, unit: 'GB', unitPrice: P.natGB, monthly: C.natData, note: '' });
+            rows.push({ cat: 'Network', service: 'Internet egress',                       qty: `${I.egressGB} GB`,             unit: 'GB',  unitPrice: P.egressGB,    monthly: C.egress,   note: 'Customer-side egress estimate' });
+            if (I.az === 3) {
+                rows.push({ cat: 'Network', service: 'Cross-AZ replication',                  qty: `${fmtGB(S.monthlyReplicaGB)}`, unit: 'GB',  unitPrice: P.crossAzGB,   monthly: C.crossAz,  note: 'OpenSearch primary→replica across AZs' });
+            }
+            rows.push({ cat: 'Network', service: P.dnsLabel,                              qty: 1,                              unit: 'mo',  unitPrice: P.dnsZoneMo,   monthly: C.dns,      note: '' });
+
+            // ---- Managed ----
+            rows.push({ cat: 'Managed', service: P.secretsLabel,                          qty: I.numSecrets,                   unit: 'secret-mo', unitPrice: P.secretMo, monthly: C.secrets,  note: '' });
+            rows.push({ cat: 'Managed', service: P.kmsLabel,                              qty: I.numKmsKeys,                   unit: 'key-mo',    unitPrice: P.kmsKeyMo, monthly: C.kms,      note: '' });
+            rows.push({ cat: 'Managed', service: P.logsLabel,                             qty: 1,                              unit: 'mo flat',   unitPrice: P.logs,     monthly: C.logs,     note: 'Flat estimate; volume-based in reality' });
+
+            // ---- 3rd Party (informational) ----
+            rows.push({ cat: '3rd Party (excluded)', service: 'Agent service LLM tokens', qty: '-', unit: '-', unitPrice: 0, monthly: 0, note: 'Customer-supplied API key + provider; usage-based, not deployment-size driven' });
+
+            return rows;
+        }
+
+        // ===== Breakdown modal =====
+        function showBreakdown(category) {
+            const rows = buildBomRows();
+            const filtered = rows.filter(r => r.cat.toLowerCase().startsWith(category.toLowerCase()));
+            const subtotal = filtered.reduce((s, r) => s + r.monthly, 0);
+            const titleMap = { compute: 'Compute Breakdown', storage: 'Storage Breakdown', network: 'Network Breakdown', managed: 'Managed Services Breakdown' };
+            document.getElementById('breakdown-title').textContent = titleMap[category] || 'Breakdown';
+
+            const { I, P, S } = lastCalc;
+            const formulaMap = {
+                compute: [
+                    `Flink metadata state = ${fmtN(I.files, 0)} files × ${I.statePerFileKB} KB = ${fmtGB(S.stateGB)}`,
+                    `Flink TMs = max(${I.flinkMinTms}, ceil(${fmtGB(S.stateGB)} / ${(P.flinkTmNvmeGB * I.flinkNvmePct / 100).toFixed(1)} GB usable)) = ${S.flinkMdTms}`,
+                    `Flink monthly hours = ${S.flinkMdTms} TMs × ${(S.flinkDutyHrsPerDay).toFixed(1)} h/day × 30.44 = ${fmtN(S.flinkMdHrsPerMonth, 0)} h`,
+                    `Audit ingestion runs as 1 always-on TM on application nodes (folded into App nodes line)`
+                ],
+                storage: [
+                    `fs_md = ${fmtN(I.files, 0)} × ${I.mdRecordSizeKB} KB × 1.2 = ${fmtGB(S.fsMdGB)}`,
+                    `Audit rollup = ${fmtN(S.auditRollupPerDay, 0)} rows/day × ${I.auditRecordSizeBytes} B × ${I.retentionDays} d = ${fmtGB(S.auditGB)}`,
+                    `Snapshots = ${fmtN(S.folders, 0)} folders × ${I.snapRecordSizeKB} KB/day × ${I.retentionDays} d = ${fmtGB(S.snapTotalGB)}`,
+                    `Raw total = ${fmtGB(S.rawDataGB)} → provisioned (×${(1 + I.replicas)} replicas × ${I.overhead} overhead) = ${fmtGB(S.provisionedGB)}`,
+                    `Per data-node disk = ${fmtGB(S.provisionedGB)} / ${I.osDataNodes} nodes = ${fmtGB(S.diskPerNodeGB)} (rounded up to nearest 100 GiB)`,
+                    `Object storage ≈ ${fmtGB(S.s3InputGB)} (input bucket 90 d + Flink checkpoints)`
+                ],
+                network: I.az === 3 ? [
+                    `Daily writes ≈ md changes + audit rollup + snapshots`,
+                    `Cross-AZ replication = daily writes × ${I.replicas} replica × 30.44 = ${fmtGB(S.monthlyReplicaGB)}/mo`,
+                    `(Set to zero in 1-AZ deployments)`
+                ] : [
+                    `1-AZ deployment: cross-AZ replication = 0`
+                ],
+                managed: [
+                    `Logs/metrics modeled as flat $${I.logsFlat}/mo - real cost is volume-based`
+                ]
+            };
+
+            let html = '';
+            if (formulaMap[category]) {
+                html += '<h3>Sizing Notes</h3><ul>' + formulaMap[category].map(f => `<li>${f}</li>`).join('') + '</ul>';
+            }
+            html += '<h3>Line Items</h3>';
+            html += '<table class="breakdown-table"><thead><tr><th>Service</th><th class="num">Quantity</th><th class="num">Unit Price</th><th class="num">Monthly</th></tr></thead><tbody>';
+            filtered.forEach(r => {
+                html += `
                     <tr>
-                        <th style="text-align:right;">Total Monthly Cost</th>
-                        <th style="text-align:right;">${formatCurrency(totalCost)}</th>
-                    </tr>
-                `;
-                content += '</table>';
+                        <td>
+                            ${r.service}
+                            ${r.note ? `<span class="formula">${r.note}</span>` : ''}
+                        </td>
+                        <td class="num">${r.qty}</td>
+                        <td class="num">${fmt$(r.unitPrice, 4)} / ${r.unit}</td>
+                        <td class="num">${fmt$(r.monthly)}</td>
+                    </tr>`;
+            });
+            html += `<tr><td colspan="3" style="text-align:right; font-weight:700;">Subtotal</td><td class="num" style="font-weight:700;">${fmt$(subtotal)}</td></tr>`;
+            html += '</tbody></table>';
 
-                breakdownContent.innerHTML = content;
-                breakdownModal.classList.add('show');
-            }
+            document.getElementById('breakdown-content').innerHTML = html;
+            openModal('breakdown-modal');
+        }
 
-            function showAwsCostsModal() {
-                const container = document.getElementById('aws-costs-container');
-                container.innerHTML = `
-                    <table class="aws-costs-table">
-                        <tr><th>Service</th><th>Item</th><th>Cost</th></tr>
-                        <tr><td>EMR Serverless</td><td>Per 1B Files Processed</td><td>${formatCurrency(awsCosts.emrServerless.costPerBillionFiles)}</td></tr>
-                        <tr><td rowspan="3">EC2 (m6g)</td><td>m6g.large</td><td>${formatCurrency(awsCosts.ec2['m6g.large'], 3)} / hour</td></tr>
-                        <tr><td>m6g.xlarge</td><td>${formatCurrency(awsCosts.ec2['m6g.xlarge'], 3)} / hour</td></tr>
-                        <tr><td>m6g.2xlarge</td><td>${formatCurrency(awsCosts.ec2['m6g.2xlarge'], 3)} / hour</td></tr>
-                        <tr><td rowspan="2">Storage</td><td>EBS gp3</td><td>${formatCurrency(awsCosts.storage.ebsGp3, 2)} / GB-month</td></tr>
-                        <tr><td>S3 Standard</td><td>${formatCurrency(awsCosts.storage.s3Standard, 3)} / GB-month</td></tr>
-                        <tr><td>Athena</td><td>Per TB Scanned</td><td>${formatCurrency(awsCosts.athena.perTBScanned)}</td></tr>
-                    </table>`;
-                awsCostsModal.classList.add('show');
-            }
-            
-            // --- Export Functions ---
-            function exportToCsv() {
-                if (Object.keys(calculationDetails).length === 0) {
-                    alert("Please run the calculation first before exporting.");
-                    return;
-                }
+        // ===== Prices modal =====
+        function showPricesModal() {
+            const cloudLabel = selectedCloud === 'aws' ? 'AWS (us-east-1)' : 'Azure (East US)';
+            document.getElementById('prices-title').textContent = `${cloudLabel} - List Prices`;
+            const P = prices[selectedCloud];
+            const def = DEFAULT_PRICES[selectedCloud];
 
-                let csvContent = "data:text/csv;charset=utf-8,";
-                csvContent += "Architecture,Monthly Cost,3-Year Total Cost\r\n";
+            const fields = [
+                { key: 'k8sControlPlaneHr', label: P.k8sLabel, unit: '$/hr' },
+                { key: 'osMasterHr',  label: `${P.osMasterLabel} (OS master)`,        unit: '$/hr' },
+                { key: 'osDataHr',    label: `${P.osDataLabel} (OS data)`,            unit: '$/hr' },
+                { key: 'appNodeHr',   label: `${P.appNodeLabel} (app nodes)`,         unit: '$/hr' },
+                { key: 'flinkTmHr',   label: `${P.flinkTmLabel} (Flink TM)`,          unit: '$/hr' },
+                { key: 'flinkTmNvmeGB', label: `Flink TM local NVMe / SSD`,           unit: 'GB' },
+                { key: 'ebsGB',       label: `${P.blockLabel} (OS data disk)`,        unit: '$/GB-mo' },
+                { key: 'blockGB',     label: 'Other block storage (master, PVC)',     unit: '$/GB-mo' },
+                { key: 'objectGB',    label: `${P.objectLabel}`,                       unit: '$/GB-mo' },
+                { key: 'lbMo',        label: `${P.lbLabel} (per LB)`,                  unit: '$/mo' },
+                { key: 'natHr',       label: 'NAT Gateway (hourly base)',              unit: '$/hr' },
+                { key: 'natGB',       label: 'NAT Gateway (data processing)',          unit: '$/GB' },
+                { key: 'egressGB',    label: 'Internet egress',                        unit: '$/GB' },
+                { key: 'crossAzGB',   label: 'Cross-AZ data transfer',                 unit: '$/GB' },
+                { key: 'dnsZoneMo',   label: P.dnsLabel,                                unit: '$/mo' },
+                { key: 'secretMo',    label: P.secretsLabel,                            unit: '$/mo' },
+                { key: 'kmsKeyMo',    label: P.kmsLabel,                                unit: '$/mo' }
+            ];
 
-                const rows = [
-                    ["OpenSearch Only", document.getElementById('os-monthly').textContent, document.getElementById('os-3year').textContent],
-                    ["Iceberg + Athena", document.getElementById('iceberg-monthly').textContent, document.getElementById('iceberg-3year').textContent],
-                    ["Hybrid (Both)", document.getElementById('hybrid-monthly').textContent, document.getElementById('hybrid-3year').textContent]
-                ];
+            let html = '<table class="price-table"><thead><tr><th>Item</th><th>Unit</th><th class="num">Default</th><th class="num">Current</th></tr></thead><tbody>';
+            fields.forEach(f => {
+                html += `
+                    <tr>
+                        <td>${f.label}</td>
+                        <td>${f.unit}</td>
+                        <td class="num">${def[f.key]}</td>
+                        <td class="num"><input class="price-edit" type="number" step="0.0001" data-key="${f.key}" value="${P[f.key]}"></td>
+                    </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('prices-content').innerHTML = html;
 
-                rows.forEach(function(rowArray) {
-                    let row = rowArray.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",");
-                    csvContent += row + "\r\n";
-                });
-
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "cloud_cost_analysis.csv");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-
-            function generateAndExportPdf(selectedArchitectures) {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-
-                let yPos = 20;
-                const leftMargin = 15;
-                const lineSpacing = 7;
-                const lineSpacingSmall = 5;
-                const pageHeight = doc.internal.pageSize.height;
-                const bottomMargin = 20;
-
-                const checkPageBreak = (spaceNeeded = lineSpacing) => {
-                    if (yPos + spaceNeeded > pageHeight - bottomMargin) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                };
-
-                // Title
-                doc.setFontSize(18);
-                doc.text("Cloud Data Architecture Cost Analysis", leftMargin, yPos);
-                yPos += lineSpacing * 2;
-
-                // Configuration section
-                checkPageBreak();
-                doc.setFontSize(14);
-                doc.text("Configuration Used", leftMargin, yPos);
-                yPos += lineSpacing;
-                
-                doc.setFontSize(10);
-                let configText = [
-                    `Number of Files: ${document.getElementById('num-files').value}`,
-                    `Metadata Record Size: ${inputValues.metadataRecordSizeKB} KB`,
-                    `Audit Log Events per Change: ${inputValues.auditLogEventsPerChange}`,
-                    `Audit Log Record Size: ${inputValues.auditLogRecordSizeKB} KB`,
-                    `Daily Change Rate: ${inputValues.dailyChangeRatePercent}%`,
-                ];
-
-                if (selectedArchitectures.os || selectedArchitectures.hybrid) {
-                    configText.push(`Hot Tier Retention: ${inputValues.hotTierDays} Days`);
-                    configText.push(`Warm Tier Retention: ${inputValues.warmTierDays} Days`);
-                    configText.push(`OpenSearch Replica Count: ${inputValues.replicaCount}`);
-                }
-                if (selectedArchitectures.iceberg || selectedArchitectures.hybrid) {
-                    configText.push(`Iceberg Retention: ${inputValues.icebergRetentionDays} Days`);
-                    configText.push(`Athena Query Scan: ${inputValues.athenaScanPercent}%`);
-                }
-                const uniqueConfigText = [...new Set(configText)];
-                
-                uniqueConfigText.forEach(line => {
-                    checkPageBreak();
-                    doc.text(line, leftMargin, yPos);
-                    yPos += lineSpacing;
-                });
-
-                yPos += lineSpacing;
-                checkPageBreak();
-
-                // Results summary section
-                doc.setFontSize(14);
-                doc.text("Cost Analysis Summary", leftMargin, yPos);
-                yPos += lineSpacing;
-
-                doc.setFontSize(10);
-                const allResults = [
-                    { key: 'os', data: ['OpenSearch Only', document.getElementById('os-monthly').textContent, document.getElementById('os-3year').textContent] },
-                    { key: 'iceberg', data: ['Iceberg + Athena', document.getElementById('iceberg-monthly').textContent, document.getElementById('iceberg-3year').textContent] },
-                    { key: 'hybrid', data: ['Hybrid (Both)', document.getElementById('hybrid-monthly').textContent, document.getElementById('hybrid-3year').textContent] }
-                ];
-
-                const results = [
-                    ["Architecture", "Monthly Cost", "3-Year Total Cost"],
-                    ...allResults.filter(r => selectedArchitectures[r.key]).map(r => r.data)
-                ];
-
-                const colWidths = [80, 50, 50];
-                results.forEach((row, rowIndex) => {
-                    checkPageBreak();
-                    doc.setFont(undefined, rowIndex === 0 ? 'bold' : 'normal');
-                    row.forEach((cell, cellIndex) => {
-                        let xPos = leftMargin + colWidths.slice(0, cellIndex).reduce((a, b) => a + b, 0);
-                        doc.text(cell, xPos, yPos);
-                    });
-                    yPos += lineSpacing;
-                    if (rowIndex === 0) {
-                        doc.setDrawColor(180);
-                        doc.line(leftMargin, yPos - (lineSpacing / 1.5), leftMargin + colWidths.reduce((a, b) => a + b, 0) - 40, yPos - (lineSpacing / 1.5));
+            document.querySelectorAll('.price-edit').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const key = e.target.dataset.key;
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v)) {
+                        prices[selectedCloud][key] = v;
+                        if (lastCalc) runCalculations();
                     }
                 });
+            });
 
-                // --- DETAILED BREAKDOWN SECTION ---
-                yPos += lineSpacing * 2;
-                checkPageBreak();
+            openModal('prices-modal');
+        }
 
-                if (results.length > 1) {
-                    doc.setFontSize(14);
-                    doc.setFont(undefined, 'bold');
-                    doc.text("Detailed Cost Breakdowns", leftMargin, yPos);
-                    yPos += lineSpacing * 1.5;
-                }
+        document.getElementById('reset-prices-btn').addEventListener('click', () => {
+            prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+            showPricesModal();
+            if (lastCalc) runCalculations();
+        });
 
-                const drawBreakdownTable = (architecture) => {
-                    checkPageBreak();
-                    const { costs, sizing } = calculationDetails;
-                    let title = '';
-                    let components = [];
+        // ===== CSV BoM export =====
+        function exportBom() {
+            if (!lastCalc) { alert('Calculate first.'); return; }
+            const { I, P, C } = lastCalc;
+            const rows = buildBomRows();
+            const cloudLabel = I.cloud === 'aws' ? 'AWS us-east-1' : 'Azure East US';
+            const azLabel = I.az === 3 ? '3-AZ' : '1-AZ';
 
-                    const emrComponent = { name: 'EMR Serverless Ingestion', cost: costs.emrCost };
-                    const hotComputeComponent = { name: `OS Hot Compute (${sizing.hotNodeCount} x ${sizing.hotInstanceType})`, cost: costs.hotComputeCost };
-                    const hotStorageComponent = { name: 'OS Hot Storage (EBS GP3)', cost: costs.hotStorageCost };
-                    const warmComputeComponent = { name: `OS Warm Compute (${sizing.warmNodeCount} x ${sizing.warmInstanceType})`, cost: costs.warmComputeCost };
-                    const warmS3Component = { name: 'OS Warm Storage (S3)', cost: costs.warmStorageS3Cost };
-                    const icebergStorageComponent = { name: 'Iceberg Archive Storage (S3)', cost: costs.icebergStorageCost };
-                    const athenaComponent = { name: 'Athena Query Cost', cost: costs.athenaQueryCost };
-                    const fixedInfraComponent = { name: 'Fixed Infrastructure Cost', cost: costs.fixedInfrastructureCost };
+            const lines = [];
+            lines.push(`# CTERA Insight BYOC - Bill of Materials`);
+            lines.push(`# Cloud,${cloudLabel}`);
+            lines.push(`# Topology,${azLabel}`);
+            lines.push(`# Files,${I.files}`);
+            lines.push(`# Daily change rate,${I.changeRatePct}%`);
+            lines.push(`# Retention,${I.retentionDays} days`);
+            lines.push(`# Pricing basis,On-demand list price - apply contracted/Reserved/Savings Plan discounts`);
+            lines.push(`# Generated,${new Date().toISOString()}`);
+            lines.push('');
+            lines.push(['Category', 'Service', 'Quantity', 'Unit', 'Unit Price (USD)', 'Monthly (USD)', 'Notes'].join(','));
+            rows.forEach(r => {
+                const csvRow = [
+                    r.cat, r.service, String(r.qty), r.unit,
+                    r.unitPrice ? r.unitPrice.toFixed(4) : '-',
+                    r.monthly ? r.monthly.toFixed(2) : '-',
+                    r.note
+                ].map(s => `"${String(s).replace(/"/g, '""')}"`).join(',');
+                lines.push(csvRow);
+            });
+            lines.push('');
+            lines.push(['', '', '', '', '', 'Monthly Total', `"${C.total.toFixed(2)}"`].join(','));
+            lines.push(['', '', '', '', '', '1-Year Total', `"${(C.total * 12).toFixed(2)}"`].join(','));
+            lines.push(['', '', '', '', '', '3-Year Total', `"${(C.total * 36).toFixed(2)}"`].join(','));
 
-                    if (architecture === 'os') {
-                        title = 'OpenSearch Only Breakdown';
-                        components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, fixedInfraComponent];
-                    } else if (architecture === 'iceberg') {
-                        title = 'Iceberg + Athena Breakdown';
-                        components = [emrComponent, icebergStorageComponent, athenaComponent, fixedInfraComponent];
-                    } else { // hybrid
-                        title = 'Hybrid (Both) Breakdown';
-                        components = [emrComponent, hotComputeComponent, hotStorageComponent, warmComputeComponent, warmS3Component, icebergStorageComponent, athenaComponent, fixedInfraComponent];
-                    }
+            const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `insight-byoc-${I.cloud}-${azLabel}-${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
 
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(title, leftMargin, yPos);
-                    yPos += lineSpacing * 1.5;
+        // ===== PDF export =====
+        function exportPdf() {
+            if (!lastCalc) { alert('Calculate first.'); return; }
+            if (!window.jspdf) { alert('PDF library not loaded.'); return; }
 
-                    const breakdownColWidths = [130, 40];
-                    const tableRightEdge = leftMargin + breakdownColWidths.reduce((a, b) => a + b, 0);
-                    
-                    doc.setFontSize(10);
-                    doc.text("Component", leftMargin, yPos);
-                    doc.text("Monthly Cost", tableRightEdge, yPos, { align: 'right' });
-                    yPos += lineSpacing * 0.5;
-                    doc.setDrawColor(180);
-                    doc.line(leftMargin, yPos, tableRightEdge, yPos);
-                    yPos += lineSpacing;
+            const { I, P, S, C } = lastCalc;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const cloudLabel = I.cloud === 'aws' ? 'AWS (us-east-1)' : 'Azure (East US)';
+            const azLabel = I.az === 3 ? '3-AZ (HA)' : '1-AZ';
 
-                    doc.setFont(undefined, 'normal');
-                    components.forEach(c => {
-                        checkPageBreak();
-                        doc.text(c.name, leftMargin, yPos);
-                        doc.text(formatCurrency(c.cost), tableRightEdge, yPos, { align: 'right' });
-                        yPos += lineSpacing;
-                    });
-                    
-                    const totalCost = components.reduce((sum, c) => sum + c.cost, 0);
-                    doc.setFont(undefined, 'bold');
-                    yPos += 2;
-                    doc.line(leftMargin, yPos, tableRightEdge, yPos);
-                    yPos += lineSpacing;
-                    
-                    checkPageBreak();
-                    doc.text("Total Monthly Cost", leftMargin, yPos);
-                    doc.text(formatCurrency(totalCost), tableRightEdge, yPos, { align: 'right' });
-                    yPos += lineSpacing * 2.5;
-                };
-                
-                if (selectedArchitectures.os) drawBreakdownTable('os');
-                if (selectedArchitectures.iceberg) drawBreakdownTable('iceberg');
-                if (selectedArchitectures.hybrid) drawBreakdownTable('hybrid');
+            let y = 14;
+            const left = 14;
+            const ph = doc.internal.pageSize.height;
+            const pw = doc.internal.pageSize.width;
 
+            const checkPage = (need = 8) => {
+                if (y + need > ph - 18) { doc.addPage(); y = 18; }
+            };
 
-                // Disclaimers
-                if ((selectedArchitectures.os || selectedArchitectures.iceberg || selectedArchitectures.hybrid) && yPos < pageHeight - 60 ){
-                     checkPageBreak();
-                     yPos += lineSpacing;
-                     doc.setFontSize(12);
-                     doc.setFont(undefined, 'bold');
-                     doc.text("Notes & Disclaimers", leftMargin, yPos);
-                     yPos += lineSpacing;
-                }
+            // ===== HEADER: Logo + Title =====
+            const logoW = 35;
+            const logoH = Math.round((50 / 108) * logoW * 10) / 10;
+            if (logoBase64) {
+                doc.addImage(logoBase64, 'PNG', left, y - 2, logoW, logoH);
+            }
+            const titleX = left + logoW + 6;
+            doc.setFontSize(15);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0);
+            doc.text('CTERA Insight \u2014 BYOC Cost Estimate', titleX, y + 4);
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(110);
+            doc.text('Generated ' + new Date().toISOString().slice(0,10) + '  \u00b7  On-demand list prices \u2014 apply contracted/Reserved discounts.', titleX, y + 10);
+            doc.setTextColor(0);
+            y += Math.max(logoH + 4, 16);
 
-                if(selectedArchitectures.os) {
-                    doc.setFontSize(9);
-                    doc.setFont(undefined, 'bold');
-                    doc.text("OpenSearch Only:", leftMargin, yPos);
-                    yPos += 5;
-                    doc.setFont(undefined, 'normal');
-                    let osDisclaimer = doc.splitTextToSize('The "OpenSearch Only" architecture retains data only for the duration specified in the Hot and Warm tier retention periods. The 3-year cost reflects running this architecture continuously, but it does not imply 3 years of data retention.', 180);
-                    checkPageBreak();
-                    doc.text(osDisclaimer, leftMargin, yPos);
-                    yPos += osDisclaimer.length * 4 + lineSpacing;
-                }
-                
-                if(selectedArchitectures.iceberg || selectedArchitectures.hybrid) {
-                    doc.setFontSize(9);
-                    doc.setFont(undefined, 'bold');
-                    doc.text("Iceberg + Athena:", leftMargin, yPos);
-                    yPos += 5;
-                    doc.setFont(undefined, 'normal');
-                    let icebergDisclaimer = doc.splitTextToSize('This model calculates cost based on the total storage at the end of the retention period to show the "peak" or "steady-state" monthly cost. It also assumes up to 200 complex queries in Athena per month.', 180);
-                    checkPageBreak();
-                    doc.text(icebergDisclaimer, leftMargin, yPos);
-                    yPos += icebergDisclaimer.length * 4 + lineSpacing;
-                }
-                
-                // --- APPENDIX: DETAILED FORMULAS ---
-                checkPageBreak(40); // Need space for title
-                if (yPos > pageHeight - 80) {
-                     doc.addPage();
-                     yPos = 20;
-                }
+            // Thin rule
+            doc.setDrawColor(180);
+            doc.setLineWidth(0.3);
+            doc.line(left, y, pw - left, y);
+            y += 8;
 
-                doc.setFontSize(14);
+            // ===== PREAMBLE =====
+
+            // Block 1 - What is CTERA Insight?
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(54, 52, 53);
+            doc.text('What is CTERA Insight?', left, y);
+            y += 5.5;
+
+            doc.setFont(undefined, 'italic');
+            doc.setFontSize(9.5);
+            doc.setTextColor(80, 91, 229);
+            doc.text('AI-Driven Analytics Service for Data-Driven IT Operations', left, y);
+            y += 5.5;
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const p1 = 'CTERA Insight is an add-on data service for the CTERA Intelligent Data Platform, designed to unlock advanced, AI-driven analytics across your entire global file system. By activating CTERA Insight, organizations can continuously ingest metadata from all CTERA Edge Filers and CTERA Portals into a unified index. This service provides the critical operational intelligence needed for IT leaders to transition from reactive data management to proactive, data-driven strategies for cost control, security, and compliance.';
+            const p1Lines = doc.splitTextToSize(p1, pw - left * 2);
+            p1Lines.forEach(line => { checkPage(5); doc.text(line, left, y); y += 4.5; });
+            y += 5;
+
+            // Block 2 - What this estimate covers
+            checkPage(25);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(54, 52, 53);
+            doc.text('What this estimate covers', left, y);
+            y += 5.5;
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const p2 = 'This document estimates the steady-state cloud infrastructure cost for a BYOC (Bring Your Own Cloud) Insight deployment \u2014 a dedicated cluster running in your own ' + cloudLabel + ' subscription, fully isolated within your cloud account. The cluster hosts all components required to run Insight: the search and analytics engine (OpenSearch), the metadata streaming pipeline (Apache Flink), the Insight dashboard and AI agent, and the supporting platform services.';
+            const p2Lines = doc.splitTextToSize(p2, pw - left * 2);
+            p2Lines.forEach(line => { checkPage(5); doc.text(line, left, y); y += 4.5; });
+            y += 5;
+
+            // Block 3 - How costs are calculated (with table)
+            checkPage(45);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(54, 52, 53);
+            doc.text('How costs are calculated', left, y);
+            y += 5.5;
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            doc.text('Resource sizing is derived from three inputs specific to your environment:', left, y);
+            y += 6;
+
+            // 3-row sizing table
+            const tblLeft = left;
+            const col1W = 50;
+            const col2W = pw - left * 2 - col1W;
+            const tblRows = [
+                ['File count',        'Metadata processing capacity and search index size'],
+                ['Daily change rate', 'Processing hours, audit log volume, cross-zone data transfer'],
+                ['Retention period',  'Historical data storage (audit rollup + folder snapshots)']
+            ];
+
+            // Header row
+            doc.setFillColor(235, 237, 255);
+            doc.setDrawColor(200);
+            doc.setLineWidth(0.2);
+            doc.rect(tblLeft, y - 4, col1W + col2W, 7, 'FD');
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(54, 52, 53);
+            doc.text('Input', tblLeft + 2, y);
+            doc.text('What it sizes', tblLeft + col1W + 2, y);
+            y += 5;
+
+            // Data rows
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0);
+            tblRows.forEach((row, i) => {
+                const rowH = 7;
+                doc.setFillColor(i % 2 === 0 ? 252 : 255, i % 2 === 0 ? 252 : 255, i % 2 === 0 ? 252 : 255);
+                doc.rect(tblLeft, y - 4, col1W + col2W, rowH, 'FD');
+                doc.setFontSize(8.5);
+                doc.text(row[0], tblLeft + 2, y);
+                const wrapped = doc.splitTextToSize(row[1], col2W - 4);
+                doc.text(wrapped, tblLeft + col1W + 2, y);
+                y += rowH;
+            });
+            y += 4;
+
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            const pricingNote = 'All prices are on-demand list prices (AWS us-east-1 / Azure East US). Apply contracted, Reserved Instance, or Savings Plan discounts to the exported line items.';
+            const pricingLines = doc.splitTextToSize(pricingNote, pw - left * 2);
+            pricingLines.forEach(line => { doc.text(line, left, y); y += 4; });
+            doc.setTextColor(0);
+            y += 5;
+
+            // Thin rule before parameters
+            doc.setDrawColor(180);
+            doc.setLineWidth(0.3);
+            doc.line(left, y, pw - left, y);
+            y += 8;
+
+            // ===== DEPLOYMENT PARAMETERS =====
+            checkPage(20);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(0);
+            doc.text('Deployment Parameters', left, y); y += 6;
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            const cfg = [
+                'Cloud: ' + cloudLabel,
+                'Topology: ' + azLabel,
+                'Files: ' + fmtN(I.files, 0),
+                'Daily change rate: ' + I.changeRatePct + '%',
+                'Retention: ' + I.retentionDays + ' days',
+                'OS data nodes: ' + I.osDataNodes + ' \u00d7 ' + P.osDataLabel,
+                'App nodes: ' + I.appNodes + ' \u00d7 ' + P.appNodeLabel,
+                'Flink metadata TMs: ' + S.flinkMdTms + ' \u00d7 ' + P.flinkTmLabel + ' (' + I.flinkDutyPct + '% duty cycle)',
+                'OS data per-node disk: ' + fmtGB(S.diskPerNodeGB),
+                'Object storage (input + checkpoints): ' + fmtGB(S.s3InputGB)
+            ];
+            cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 5; });
+            y += 4;
+
+            // ===== COST SUMMARY =====
+            checkPage(25);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Cost Summary', left, y); y += 6;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const summary = [
+                ['Monthly', fmt$(C.total)],
+                ['1 Year',  fmt$(C.total * 12)],
+                ['3 Years', fmt$(C.total * 36)]
+            ];
+            summary.forEach(([k, v]) => { checkPage(); doc.text(k, left, y); doc.text(v, left + 80, y, { align: 'right' }); y += 5; });
+            y += 6;
+
+            // ===== BILL OF MATERIALS =====
+            checkPage(15);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Bill of Materials', left, y); y += 6;
+            doc.setFontSize(8);
+
+            const colHeaders = ['Service', 'Qty', 'Unit price', 'Monthly'];
+            const colWidths  = [85, 20, 38, 25];
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+
+            const drawHeaders = () => {
                 doc.setFont(undefined, 'bold');
-                doc.text("Appendix: Detailed Cost Formulas", leftMargin, yPos);
-                yPos += lineSpacing * 1.5;
-                
-                const appendixFormulas = {
-                    common: [
-                        {
-                            title: 'Daily Changed Files',
-                            lines: ['= Number of Files * (Daily Change Rate / 100)']
-                        },
-                        {
-                            title: 'Total Daily Ingest (GB)',
-                            lines: [
-                                '= Daily Metadata Ingest GB + Daily Audit Log Ingest GB',
-                                '  - Daily Metadata Ingest GB = (Daily Changed Files * Metadata Record Size KB) / 1,048,576',
-                                '  - Daily Audit Log Ingest GB = (Daily Changed Files * Audit Events * Audit Log Record Size KB) / 1,048,576'
-                            ]
-                        },
-                        {
-                            title: 'EMR Serverless Ingestion Cost',
-                            lines: ['= (Number of Files / 1,000,000,000) * EMR Cost Per Billion * 30.44']
-                        },
-                        {
-                            title: 'Fixed Infrastructure Cost',
-                            lines: ['= A fixed monthly charge for shared resources (ECS, RDS, etc.)']
-                        }
-                    ],
-                    os: [
-                        {
-                            title: 'OpenSearch Hot Tier Storage (GB, with replicas)',
-                            lines: ['= (Total Daily Ingest GB * Hot Tier Retention Days) * (1 + Replica Count)']
-                        },
-                        {
-                            title: 'OpenSearch Hot Tier Storage Cost (EBS GP3)',
-                            lines: ['= Hot Tier Storage GB * EBS GP3 Price Per GB']
-                        },
-                         {
-                            title: 'OpenSearch Hot Tier Compute Cost',
-                            lines: [
-                                '= Hot Node Count * EC2 Instance Hourly Price * 24 * 30.44',
-                                '  - Instance Type is dynamically selected based on Hot Tier Storage GB.',
-                                '  - Hot Node Count = MAX(2, CEILING(Hot Tier Storage GB / 500 GB per Node))'
-                            ]
-                        },
-                        {
-                            title: 'OpenSearch Warm Tier Storage (GB)',
-                            lines: ['= Total Daily Ingest GB * Warm Tier Retention Days']
-                        },
-                         {
-                            title: 'OpenSearch Warm Tier Storage Cost (S3)',
-                            lines: ['= Warm Tier Storage GB * S3 Standard Price Per GB']
-                        },
-                        {
-                            title: 'OpenSearch Warm Tier Compute Cost',
-                            lines: [
-                                '= Warm Node Count * EC2 Instance Hourly Price * 24 * 30.44',
-                                '  - Instance Type is dynamically selected based on Warm Tier Storage GB.',
-                                '  - Warm Node Count = MAX(2, CEILING(Warm Tier Storage GB / 4000 GB per Node))'
-                            ]
-                        }
-                    ],
-                    iceberg: [
-                        {
-                            title: 'Iceberg Peak Storage (GB)',
-                            lines: [
-                                '= Initial Metadata Size GB + Total Added Data GB',
-                                '  - Initial Metadata Size GB = (Number of Files * Metadata Record Size KB) / 1,048,576',
-                                '  - Total Added Data GB = Total Daily Ingest GB * Iceberg Retention Days'
-                            ]
-                        },
-                        {
-                            title: 'Iceberg Peak Storage Cost (S3)',
-                            lines: ['= Iceberg Peak Storage GB * S3 Standard Price Per GB']
-                        },
-                        {
-                            title: 'Athena Query Cost',
-                            lines: [
-                                '= (Iceberg Peak Storage GB / 1024) * (Athena Scan % / 100) * 200 Queries * Athena Price Per TB',
-                                '  - Assumes 200 complex queries per month.'
-                            ]
-                        },
-                    ]
-                };
+                let x = left;
+                colHeaders.forEach((h, i) => {
+                    if (i >= 1) doc.text(h, x + colWidths[i] - 1, y, { align: 'right' });
+                    else doc.text(h, x, y);
+                    x += colWidths[i];
+                });
+                doc.setFont(undefined, 'normal');
+                y += 1;
+                doc.setDrawColor(160);
+                doc.line(left, y, left + totalWidth, y);
+                y += 4;
+            };
 
-                const writeAppendixSection = (title, formulas) => {
-                    checkPageBreak(20);
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text(title, leftMargin, yPos);
-                    yPos += lineSpacing * 1.5;
+            const rows = buildBomRows();
+            const grouped = {};
+            rows.forEach(r => { (grouped[r.cat] = grouped[r.cat] || []).push(r); });
 
-                    doc.setFontSize(9);
-                    formulas.forEach(formula => {
-                        checkPageBreak(formula.lines.length * lineSpacingSmall + lineSpacingSmall);
-                        doc.setFont(undefined, 'bold');
-                        doc.text(formula.title, leftMargin + 3, yPos);
-                        yPos += lineSpacingSmall;
-                        
-                        doc.setFont(undefined, 'normal');
-                        formula.lines.forEach(line => {
-                            checkPageBreak();
-                            doc.text(line, leftMargin + 6, yPos);
-                            yPos += lineSpacingSmall;
-                        });
-                        yPos += lineSpacingSmall; // Extra space between formulas
-                    });
-                };
+            Object.keys(grouped).forEach(cat => {
+                checkPage(15);
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(10);
+                doc.text(cat, left, y); y += 5;
+                doc.setFontSize(8);
+                drawHeaders();
 
-                if (selectedArchitectures.os) {
-                    let formulas = [...appendixFormulas.common, ...appendixFormulas.os];
-                    writeAppendixSection("OpenSearch Only Formulas", formulas);
-                }
-                if (selectedArchitectures.iceberg) {
-                    let formulas = [...appendixFormulas.common, ...appendixFormulas.iceberg];
-                     writeAppendixSection("Iceberg + Athena Formulas", formulas);
-                }
-                if (selectedArchitectures.hybrid) {
-                    let formulas = [...appendixFormulas.common, ...appendixFormulas.os, ...appendixFormulas.iceberg];
-                    const uniqueFormulas = formulas.filter((v,i,a)=>a.findIndex(t=>(t.title === v.title))===i) // remove duplicates
-                    writeAppendixSection("Hybrid (Both) Formulas", uniqueFormulas);
-                }
-
-
-                // Save PDF
-                doc.save('cloud_cost_analysis_custom.pdf');
-            }
-            
-            // --- Event Listener Attachments ---
-            toggleAdvancedBtn.addEventListener('click', () => {
-                advancedConfig.classList.toggle('show');
-            });
-            
-            calculateBtn.addEventListener('click', runCalculations);
-
-            viewAwsCostsBtn.addEventListener('click', showAwsCostsModal);
-            closeAwsModalBtn.addEventListener('click', () => awsCostsModal.classList.remove('show'));
-
-            infoBtn.addEventListener('click', () => mainInfoModal.classList.add('show'));
-            closeMainInfoModalBtn.addEventListener('click', () => mainInfoModal.classList.remove('show'));
-            
-            osDisclaimerBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent row click event
-                osDisclaimerModal.classList.add('show');
-            });
-            closeOsDisclaimerModalBtn.addEventListener('click', () => osDisclaimerModal.classList.remove('show'));
-
-            icebergDisclaimerBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent row click event
-                icebergDisclaimerModal.classList.add('show');
-            });
-            closeIcebergDisclaimerModalBtn.addEventListener('click', () => icebergDisclaimerModal.classList.remove('show'));
-            
-            closeBreakdownModalBtn.addEventListener('click', () => breakdownModal.classList.remove('show'));
-
-            resultsTbody.addEventListener('click', (event) => {
-                const row = event.target.closest('tr');
-                if (row && row.dataset.architecture) {
-                    showBreakdownModal(row.dataset.architecture);
-                }
+                grouped[cat].forEach(r => {
+                    checkPage(8);
+                    let x = left;
+                    const truncate = (s, max) => {
+                        s = String(s);
+                        return s.length > max ? s.slice(0, max - 1) + '\u2026' : s;
+                    };
+                    doc.text(truncate(r.service, 50), x, y); x += colWidths[0];
+                    doc.text(truncate(String(r.qty), 12), x + colWidths[1] - 1, y, { align: 'right' }); x += colWidths[1];
+                    doc.text(truncate(fmt$(r.unitPrice, 4) + '/' + r.unit, 22), x + colWidths[2] - 1, y, { align: 'right' }); x += colWidths[2];
+                    doc.text(r.monthly ? fmt$(r.monthly) : '-', x + colWidths[3] - 1, y, { align: 'right' });
+                    y += 4.5;
+                    if (r.note) {
+                        doc.setTextColor(120);
+                        doc.setFontSize(7);
+                        doc.text(truncate(r.note, 110), left + 2, y);
+                        doc.setTextColor(0);
+                        doc.setFontSize(8);
+                        y += 4;
+                    }
+                });
+                y += 4;
             });
 
-            exportBtn.addEventListener('click', exportToCsv);
+            checkPage(20);
+            y += 2;
+            doc.setDrawColor(0);
+            doc.line(left, y, left + totalWidth, y); y += 5;
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(10);
+            doc.text('Monthly Total', left, y);
+            doc.text(fmt$(C.total), left + totalWidth, y, { align: 'right' });
+            y += 8;
 
-            exportPdfBtn.addEventListener('click', () => {
-                 if (Object.keys(calculationDetails).length === 0) {
-                    alert("Please run the calculation first before exporting.");
-                    return;
-                }
-                exportOptionsModal.classList.add('show');
-            });
-            closeExportOptionsModalBtn.addEventListener('click', () => exportOptionsModal.classList.remove('show'));
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(120);
+            doc.text('Out of scope: Agent service LLM token cost (customer-supplied API key + provider, usage-based).', left, y);
+            doc.setTextColor(0);
 
-            generatePdfBtn.addEventListener('click', () => {
-                const selectedArchitectures = {
-                    os: document.getElementById('export-os').checked,
-                    iceberg: document.getElementById('export-iceberg').checked,
-                    hybrid: document.getElementById('export-hybrid').checked
-                };
-                if (!selectedArchitectures.os && !selectedArchitectures.iceberg && !selectedArchitectures.hybrid) {
-                    alert("Please select at least one architecture to export.");
-                    return;
-                }
-                exportOptionsModal.classList.remove('show');
-                generateAndExportPdf(selectedArchitectures);
-            });
+            doc.save('insight-byoc-' + I.cloud + '-' + azLabel.toLowerCase() + '-' + new Date().toISOString().slice(0,10) + '.pdf');
+        }
 
+        // ===== Modal helpers =====
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-            // Close modals on outside click
-            window.addEventListener('click', (event) => {
-                if (event.target == awsCostsModal) awsCostsModal.classList.remove('show');
-                if (event.target == osDisclaimerModal) osDisclaimerModal.classList.remove('show');
-                if (event.target == icebergDisclaimerModal) icebergDisclaimerModal.classList.remove('show');
-                if (event.target == mainInfoModal) mainInfoModal.classList.remove('show');
-                if (event.target == breakdownModal) breakdownModal.classList.remove('show');
-                if (event.target == exportOptionsModal) exportOptionsModal.classList.remove('show');
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.dataset.close));
+        });
+        window.addEventListener('click', (e) => {
+            document.querySelectorAll('.modal').forEach(m => {
+                if (e.target === m) m.classList.remove('show');
             });
         });
+
+        document.getElementById('info-btn').addEventListener('click', () => openModal('info-modal'));
+        document.getElementById('view-prices-link').addEventListener('click', (e) => { e.preventDefault(); showPricesModal(); });
+
+        resultsTbody.addEventListener('click', (e) => {
+            const row = e.target.closest('tr.category-row');
+            if (row) showBreakdown(row.dataset.cat);
+        });
+
+        document.getElementById('export-bom-btn').addEventListener('click', exportBom);
+        document.getElementById('export-pdf-btn').addEventListener('click', exportPdf);
+        calculateBtn.addEventListener('click', runCalculations);
+
+        // Initial calc on load (so page isn't blank-feeling)
+        runCalculations();
+    });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </body>
 </html>
-
