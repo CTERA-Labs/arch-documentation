@@ -791,7 +791,9 @@
                 secretsLabel: 'Secrets Manager',
                 kmsLabel: 'KMS key',
                 logsLabel: 'CloudWatch Logs/Metrics',
-                k8sLabel: 'EKS control plane'
+                k8sLabel: 'EKS control plane',
+                ri1yDiscount: 0.34,
+                ri3yDiscount: 0.55
             },
             azure: {
                 k8sControlPlaneHr: 0.10,
@@ -822,7 +824,9 @@
                 secretsLabel: 'Key Vault secret',
                 kmsLabel: 'Key Vault key',
                 logsLabel: 'Azure Monitor / Log Analytics',
-                k8sLabel: 'AKS control plane (Standard)'
+                k8sLabel: 'AKS control plane (Standard)',
+                ri1yDiscount: 0.40,
+                ri3yDiscount: 0.60
             }
         };
 
@@ -1046,12 +1050,18 @@
             // ----- Aggregates -----
             const total = compute + storage + network + managed;
 
+            // ----- RI Discount for 1Y/3Y (Compute Only, excluding K8s) -----
+            const discountableCompute = osMaster + osData + appNode + ingestor;
+            const nonDiscountable = total - discountableCompute;
+            const total1y = (discountableCompute * (1 - P.ri1yDiscount) + nonDiscountable) * 12;
+            const total3y = (discountableCompute * (1 - P.ri3yDiscount) + nonDiscountable) * 36;
+
             return {
                 k8s, osMaster, osData, appNode, ingestor, compute,
                 osDataDisk, osMasterDisk, appPvc, objectStorage, storage,
                 lbs, natBase, natData, egress, crossAz, dns, network,
                 secrets, kms, logs, managed,
-                total
+                total, total1y, total3y
             };
         }
 
@@ -1080,8 +1090,8 @@
 
             // Render summary tiles
             document.getElementById('total-monthly').textContent = fmt$(C.total);
-            document.getElementById('total-1y').textContent = fmt$(C.total * 12);
-            document.getElementById('total-3y').textContent = fmt$(C.total * 36);
+            document.getElementById('total-1y').textContent = fmt$(C.total1y);
+            document.getElementById('total-3y').textContent = fmt$(C.total3y);
             document.getElementById('footer-monthly').textContent = fmt$(C.total);
 
             // Render category rows
@@ -1228,7 +1238,9 @@
                 { key: 'crossAzGB',   label: 'Cross-AZ data transfer',                 unit: '$/GB' },
                 { key: 'dnsZoneMo',   label: P.dnsLabel,                                unit: '$/mo' },
                 { key: 'secretMo',    label: P.secretsLabel,                            unit: '$/mo' },
-                { key: 'kmsKeyMo',    label: P.kmsLabel,                                unit: '$/mo' }
+                { key: 'kmsKeyMo',    label: P.kmsLabel,                                unit: '$/mo' },
+                { key: 'ri1yDiscount',label: '1-Year RI Discount (Compute)',            unit: '% (0-1)' },
+                { key: 'ri3yDiscount',label: '3-Year RI Discount (Compute)',            unit: '% (0-1)' }
             ];
 
             let html = '<table class="price-table"><thead><tr><th>Item</th><th>Unit</th><th class="num">Default</th><th class="num">Current</th></tr></thead><tbody>';
@@ -1279,7 +1291,7 @@
             lines.push(`# Files,${I.files}`);
             lines.push(`# Daily change rate,${I.changeRatePct}%`);
             lines.push(`# Retention,${I.retentionDays} days`);
-            lines.push(`# Pricing basis,On-demand list price - apply contracted/Reserved/Savings Plan discounts`);
+            lines.push(`# Pricing basis,Monthly uses On-Demand list prices. 1-Year and 3-Year totals include RI/Savings Plan discounts for compute.`);
             lines.push(`# Generated,${new Date().toISOString()}`);
             lines.push('');
             lines.push(['Category', 'Service', 'Quantity', 'Unit', 'Unit Price (USD)', 'Monthly (USD)', 'Notes'].join(','));
@@ -1294,8 +1306,8 @@
             });
             lines.push('');
             lines.push(['', '', '', '', '', 'Monthly Total', `"${C.total.toFixed(2)}"`].join(','));
-            lines.push(['', '', '', '', '', '1-Year Total', `"${(C.total * 12).toFixed(2)}"`].join(','));
-            lines.push(['', '', '', '', '', '3-Year Total', `"${(C.total * 36).toFixed(2)}"`].join(','));
+            lines.push(['', '', '', '', '', '1-Year Total', `"${C.total1y.toFixed(2)}"`].join(','));
+            lines.push(['', '', '', '', '', '3-Year Total', `"${C.total3y.toFixed(2)}"`].join(','));
 
             const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1342,7 +1354,7 @@
             doc.setFontSize(8.5);
             doc.setFont(undefined, 'normal');
             doc.setTextColor(110);
-            doc.text('Generated ' + new Date().toISOString().slice(0,10) + '  \u00b7  On-demand list prices \u2014 apply contracted/Reserved discounts.', titleX, y + 10);
+            doc.text('Generated ' + new Date().toISOString().slice(0,10) + '  \u00b7  Monthly uses On-Demand. 1Y/3Y use RI list prices.', titleX, y + 10);
             doc.setTextColor(0);
             y += Math.max(logoH + 4, 16);
 
@@ -1453,7 +1465,7 @@
 
             doc.setFontSize(8);
             doc.setTextColor(100);
-            const pricingNote = 'All prices are on-demand list prices (AWS us-east-1 / Azure East US). Apply contracted, Reserved Instance, or Savings Plan discounts to the exported line items.';
+            const pricingNote = 'Monthly prices are on-demand list prices (AWS us-east-1 / Azure East US). 1-Year and 3-Year totals include Reserved Instance / Savings Plan discounts on compute resources.';
             const pricingLines = doc.splitTextToSize(pricingNote, pw - left * 2);
             pricingLines.forEach(line => { doc.text(line, left, y); y += 4; });
             doc.setTextColor(0);
@@ -1495,8 +1507,8 @@
             doc.setFont(undefined, 'normal');
             const summary = [
                 ['Monthly', fmt$(C.total)],
-                ['1 Year',  fmt$(C.total * 12)],
-                ['3 Years', fmt$(C.total * 36)]
+                ['1 Year',  fmt$(C.total1y)],
+                ['3 Years', fmt$(C.total3y)]
             ];
             summary.forEach(([k, v]) => { checkPage(); doc.text(k, left, y); doc.text(v, left + 80, y, { align: 'right' }); y += 4; });
             y += 2.5;
