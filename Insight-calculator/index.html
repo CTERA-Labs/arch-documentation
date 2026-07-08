@@ -185,7 +185,7 @@
             border-bottom: 1px dotted var(--secondary-color);
         }
 
-        .input-group input {
+        .input-group input, .input-group select {
             padding: 0.65rem;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -436,6 +436,28 @@
         .modal-content h3 { color: var(--text-color); margin-top: 1.25rem; margin-bottom: 0.5rem; }
         .modal-content p { line-height: 1.55; }
 
+        #tenants-table input, #tenants-table select {
+            padding: 0.45rem 0.55rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #tenants-table td { vertical-align: middle; }
+
+        .remove-tenant-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+        }
+        .remove-tenant-btn:hover { color: #dc3545; }
+        .remove-tenant-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .scope-note {
             background-color: #fff3cd;
             border: 1px solid #ffe69c;
@@ -474,35 +496,13 @@
                         </div>
                     </div>
                     <div class="toggle-group">
-                        <label class="toggle-label">Workload Scale</label>
-                        <div class="toggle-buttons" id="scale-toggle">
-                            <button class="scale-large" data-scale="large">Large (>1B files)</button>
-                            <button class="scale-standard active" data-scale="standard">Standard (<1B files)</button>
+                        <label class="toggle-label">Data Node Failure Tolerance
+                            <span class="info-tip" title="With S3 remote-backed storage, durability is never at risk. A replica keeps shards available (queries + ingestion) during a data node crash or rolling restart. Without it, affected shards are unavailable until recovery from S3 completes.">ⓘ</span>
+                        </label>
+                        <div class="toggle-buttons" id="replica-toggle">
+                            <button class="scale-standard active" data-replicas="0">No replica (default)</button>
+                            <button class="scale-large" data-replicas="1">Replica (uptime)</button>
                         </div>
-                    </div>
-                </div>
-
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label for="num-files">
-                            Number of Files
-                            <span class="info-tip" title="Total filesystem nodes ingested into Insight. Accepts shorthand like 100M, 1B, 5B.">ⓘ</span>
-                        </label>
-                        <input type="text" id="num-files" value="100M">
-                    </div>
-                    <div class="input-group">
-                        <label for="change-rate">
-                            Daily Change Rate (%)
-                            <span class="info-tip" title="Portion of files that change per day. Drives ingestor processing duration and cross-AZ replication volume.">ⓘ</span>
-                        </label>
-                        <input type="number" id="change-rate" step="0.1" value="0.5">
-                    </div>
-                    <div class="input-group">
-                        <label for="retention">
-                            Retention (days)
-                            <span class="info-tip" title="Single retention slider — applies to fs_md, audit log rollup index, and history snapshots.">ⓘ</span>
-                        </label>
-                        <input type="number" id="retention" value="365">
                     </div>
                 </div>
 
@@ -520,35 +520,35 @@
                             <div class="input-grid">
                                 <div class="input-group">
                                     <label for="state-per-file">Ingestor state per file (KB)</label>
-                                    <input type="number" id="state-per-file" step="0.05" value="0.5">
+                                    <input type="number" id="state-per-file" step="0.05" value="0.1">
                                 </div>
                                 <div class="input-group">
-                                    <label for="folder-ratio">Folder ratio (% of total nodes)</label>
-                                    <input type="number" id="folder-ratio" step="0.1" value="2">
+                                    <label for="folder-ratio">Folder ratio (% of total items)</label>
+                                    <input type="number" id="folder-ratio" step="0.1" value="10">
                                 </div>
                                 <div class="input-group">
-                                    <label for="md-record-size">Metadata record size (KB)</label>
-                                    <input type="number" id="md-record-size" step="0.1" value="0.5">
+                                    <label for="md-record-size">fs_md record size (bytes)</label>
+                                    <input type="number" id="md-record-size" step="1" value="327">
                                 </div>
                                 <div class="input-group">
-                                    <label for="snap-record-size">Snapshot record size (KB)</label>
-                                    <input type="number" id="snap-record-size" step="0.1" value="1.0">
+                                    <label for="snap-record-size">Folder history record size (bytes)</label>
+                                    <input type="number" id="snap-record-size" step="1" value="228">
                                 </div>
                                 <div class="input-group">
-                                    <label for="audit-rate">Audit rollup rows per file/day</label>
-                                    <input type="number" id="audit-rate" step="0.001" value="0.012">
+                                    <label for="audit-rate">Audit events per item/day</label>
+                                    <input type="number" id="audit-rate" step="0.0001" value="0.0022">
                                 </div>
                                 <div class="input-group">
-                                    <label for="audit-record-size">Audit rollup record size (bytes)</label>
-                                    <input type="number" id="audit-record-size" step="10" value="100">
+                                    <label for="audit-record-size">Audit record size (bytes)</label>
+                                    <input type="number" id="audit-record-size" step="1" value="771">
                                 </div>
                                 <div class="input-group">
-                                    <label for="replicas">OpenSearch replica count</label>
-                                    <input type="number" id="replicas" value="1">
+                                    <label for="monthly-sample">Monthly history folder sampling (%)</label>
+                                    <input type="number" id="monthly-sample" step="1" value="5">
                                 </div>
                                 <div class="input-group">
-                                    <label for="overhead-multiplier">Indexing overhead multiplier</label>
-                                    <input type="number" id="overhead-multiplier" step="0.05" value="1.3">
+                                    <label for="os-watermark">Usable NVMe per data node (%)</label>
+                                    <input type="number" id="os-watermark" step="1" value="85">
                                 </div>
                             </div>
                         </div>
@@ -557,16 +557,42 @@
                             <h3>Data Ingestor Sizing</h3>
                             <div class="input-grid">
                                 <div class="input-group">
-                                    <label for="flink-duty-cycle">Ingestor duty cycle (%)</label>
-                                    <input type="number" id="flink-duty-cycle" step="1" value="33">
+                                    <label for="flink-duty-cycle">Ingestor duty cycle (% per tenant)</label>
+                                    <input type="number" id="flink-duty-cycle" step="1" value="30">
                                 </div>
                                 <div class="input-group">
                                     <label for="flink-nvme-usage">Usable state per TM (% of NVMe)</label>
                                     <input type="number" id="flink-nvme-usage" step="1" value="85">
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="advanced-section">
+                            <h3>Application Node Sizing</h3>
+                            <div class="input-grid">
                                 <div class="input-group">
-                                    <label for="flink-min-tms">Minimum ingestor nodes</label>
-                                    <input type="number" id="flink-min-tms" value="2">
+                                    <label for="app-base-cpu">Cluster baseline CPU (cores)</label>
+                                    <input type="number" id="app-base-cpu" step="0.1" value="6.5">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-base-mem">Cluster baseline memory (GiB)</label>
+                                    <input type="number" id="app-base-mem" step="0.1" value="24.7">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-tenant-cpu">Per-tenant CPU (cores)</label>
+                                    <input type="number" id="app-tenant-cpu" step="0.1" value="3.5">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-tenant-mem">Per-tenant memory (GiB)</label>
+                                    <input type="number" id="app-tenant-mem" step="0.1" value="6.7">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-headroom">Headroom multiplier</label>
+                                    <input type="number" id="app-headroom" step="0.05" value="1.2">
+                                </div>
+                                <div class="input-group">
+                                    <label for="app-min-nodes">Minimum app nodes</label>
+                                    <input type="number" id="app-min-nodes" value="2">
                                 </div>
                             </div>
                         </div>
@@ -574,14 +600,6 @@
                         <div class="advanced-section">
                             <h3>Cluster Sizing</h3>
                             <div class="input-grid">
-                                <div class="input-group">
-                                    <label for="os-data-nodes">OpenSearch data nodes</label>
-                                    <input type="number" id="os-data-nodes" value="3">
-                                </div>
-                                <div class="input-group">
-                                    <label for="app-nodes">Application nodes</label>
-                                    <input type="number" id="app-nodes" value="3">
-                                </div>
                                 <div class="input-group">
                                     <label for="git-pvc">Git + Artifact PVC (GB)</label>
                                     <input type="number" id="git-pvc" value="300">
@@ -612,8 +630,31 @@
                 </div>
             </div>
 
+            <div class="card" id="tenants-card">
+                <h2>2. Tenants</h2>
+                <table class="results-table" id="tenants-table">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th>Number of Files
+                                <span class="info-tip" title="Total filesystem items ingested for this tenant. Accepts shorthand like 100M, 1B, 5B.">ⓘ</span>
+                            </th>
+                            <th>Retention
+                                <span class="info-tip" title="Retention for the tenant's activity (audit) index and folder size history monthly tier.">ⓘ</span>
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tenants-tbody"></tbody>
+                </table>
+                <div class="button-group">
+                    <button id="add-tenant-btn" class="btn btn-secondary">+ Add Tenant</button>
+                </div>
+            </div>
+
             <div class="card" id="results-card">
-                <h2>2. Cost Estimate</h2>
+                <h2>3. Cost Estimate</h2>
+                <div class="info-note" id="tenant-summary-note"></div>
 
                 <div id="warning-container"></div>
 
@@ -675,19 +716,21 @@
 
             <h3>What's Modeled</h3>
             <ul>
-                <li><strong>Workload cluster:</strong> Kubernetes control plane, OpenSearch (3 master + N data nodes), application nodes (Atlantis, Backoffice, ArgoCD, Argo Workflows, insight-ui, agent-service, self-hosted Git, self-hosted artifact registry), Ingestor JobManagers (always-on) and processing nodes (scale-to-zero, hourly runs).</li>
-                <li><strong>Storage:</strong> EBS gp3 / Premium SSD v2 for OpenSearch data nodes (sized from retention), application-node PVCs for Git + artifact repo, S3 / Blob Hot for input bucket and ingestor checkpoints.</li>
+                <li><strong>Workload cluster:</strong> Kubernetes control plane, OpenSearch (3 master + N data nodes on storage-optimized NVMe instances with S3 remote-backed storage), application nodes (Atlantis, Backoffice, ArgoCD, Argo Workflows, insight-ui, agent-service, self-hosted Git, self-hosted artifact registry), Ingestor JobManagers (always-on) and a single processing TaskManager (duty-cycled per tenant).</li>
+                <li><strong>Storage:</strong> OpenSearch data on instance-local NVMe (included in instance price) with a primary segment copy in S3 / Blob (remote store), application-node PVCs for Git + artifact repo, S3 / Blob Hot for input bucket and ingestor checkpoints.</li>
                 <li><strong>Network:</strong> Internal load balancers, NAT Gateway, cross-AZ OpenSearch replication (when 3-AZ enabled), egress, DNS.</li>
                 <li><strong>Managed services:</strong> Secrets Manager / Key Vault, KMS / Key Vault keys, CloudWatch / Log Analytics.</li>
             </ul>
 
             <h3>Key Sizing Formulas</h3>
             <ul>
-                <li><strong>Ingestor processing nodes</strong> = max(min, ceil(state_GB / (NVMe × 85%))), where state_GB = files × 0.5 KB.</li>
-                <li><strong>OpenSearch storage</strong> = (fs_md + audit_rollup + folder_snapshots) × (1 + replicas) × 1.3 indexing overhead, divided across data nodes.</li>
-                <li><strong>Audit log volume</strong> = files × 0.012 rollup rows/day. Only rolled-up records are stored; raw events are out of scope for OS sizing.</li>
-                <li><strong>Folder snapshots</strong> = (files × 2%) × 1 KB/day × retention.</li>
-                <li><strong>Cross-AZ replication</strong> applies only in 3-AZ deployments and is calculated from daily ingest volume × replicas.</li>
+                <li><strong>Ingestor</strong> = 1 TaskManager per tenant, duty-cycled (~30% each); cost scales with tenant count, not data size. Flink state is ~100 GB per 1B files (0.1 KB/file), stored per tenant — one i8g.large covers a ~4B-file tenant.</li>
+                <li><strong>Application nodes</strong> = cheapest instance fit for cluster baseline (~6.5 CPU / 24.7 GiB: platform services, ArgoCD, Argo Workflows, Atlantis, Backoffice, Keycloak + in-cluster Postgres, Gitea) + per-tenant demand (~3.5 CPU / 6.7 GiB: Flink JMs, fs-ca ingestion, UI, agent-service, MCP, PDF, reports) × 1.2 headroom.</li>
+                <li><strong>OpenSearch storage</strong> = (fs_md + activity + folder_history) × (1 + replicas), using measured compressed per-doc sizes (fs_md 327 B, history 228 B, activity 771 B).</li>
+                <li><strong>Data node size + count</strong>: the smallest instance in the storage-optimized ladder (i8g.large → xlarge → 2xlarge) whose local NVMe fits the data at the 85% watermark in the minimum node count; larger datasets scale out on the largest size. No EBS for data — durability via S3 remote store.</li>
+                <li><strong>Activity volume</strong> = files × 0.0022 consolidated events/day (2.2M/day per 1B items, production average) × retention.</li>
+                <li><strong>Folder history</strong> = tiered: daily ×7 + weekly ×4 for all folders (10% of items), then one monthly snapshot per remaining retention month for 5% of folders.</li>
+                <li><strong>Replicas default to 0</strong> — with remote-backed storage a replica is an uptime choice (shard availability during node failure/restarts), not a durability requirement. Cross-AZ replication cost applies only when a replica is enabled.</li>
             </ul>
 
             <h3>Out of Scope</h3>
@@ -765,10 +808,19 @@
             aws: {
                 k8sControlPlaneHr: 0.10,
                 osMasterHr: 0.0376,        // t4g.medium
-                osDataHr:   0.1632,        // m7g.xlarge
-                appNodeHr:  0.1632,        // m7g.xlarge
-                flinkTmHr:  0.1068,        // m7gd.large
-                flinkTmNvmeGB: 118,        // local NVMe
+                osDataSizes: [             // storage-optimized ladder, smallest adequate size wins
+                    { label: 'i8g.large (468 GB NVMe)',    hr: 0.1716, nvmeGB: 468 },
+                    { label: 'i8g.xlarge (937 GB NVMe)',   hr: 0.3432, nvmeGB: 937 },
+                    { label: 'i8g.2xlarge (1,875 GB NVMe)', hr: 0.6864, nvmeGB: 1875 }
+                ],
+                appNodeSizes: [            // cheapest-fit ladder for application nodes
+                    { label: 'm7g.large (2 vCPU, 8 GiB)',    hr: 0.0816, cpu: 2,  memGiB: 8 },
+                    { label: 'm7g.xlarge (4 vCPU, 16 GiB)',  hr: 0.1632, cpu: 4,  memGiB: 16 },
+                    { label: 'm7g.2xlarge (8 vCPU, 32 GiB)', hr: 0.3264, cpu: 8,  memGiB: 32 },
+                    { label: 'm7g.4xlarge (16 vCPU, 64 GiB)', hr: 0.6528, cpu: 16, memGiB: 64 }
+                ],
+                flinkTmHr:  0.1716,        // i8g.large
+                flinkTmNvmeGB: 468,        // local NVMe
                 ebsGB:      0.08,          // gp3
                 blockGB:    0.08,          // app/master block
                 objectGB:   0.023,         // S3 Standard
@@ -781,9 +833,7 @@
                 secretMo:   0.40,
                 kmsKeyMo:   1.00,
                 osMasterLabel: 't4g.medium',
-                osDataLabel: 'm7g.xlarge',
-                appNodeLabel: 'm7g.xlarge',
-                flinkTmLabel: 'm7gd.large (118 GB NVMe)',
+                flinkTmLabel: 'i8g.large (468 GB NVMe)',
                 blockLabel: 'EBS gp3',
                 objectLabel: 'S3 Standard',
                 lbLabel: 'Internal ALB',
@@ -798,9 +848,18 @@
             azure: {
                 k8sControlPlaneHr: 0.10,
                 osMasterHr: 0.068,         // D2pls_v5
-                osDataHr:   0.181,         // D4pds_v5
-                appNodeHr:  0.181,         // D4pds_v5
-                flinkTmHr:  0.20,          // D4ds_v5
+                osDataSizes: [             // provisional ladder — Azure has no small storage-optimized SKU
+                    { label: 'D4ds_v5 (150 GB SSD, provisional)',  hr: 0.226, nvmeGB: 150 },
+                    { label: 'D8ds_v5 (300 GB SSD, provisional)',  hr: 0.452, nvmeGB: 300 },
+                    { label: 'L8s_v3 (1,920 GB NVMe, provisional)', hr: 0.696, nvmeGB: 1920 }
+                ],
+                appNodeSizes: [            // cheapest-fit ladder for application nodes
+                    { label: 'D2pds_v5 (2 vCPU, 8 GiB)',    hr: 0.0904, cpu: 2,  memGiB: 8 },
+                    { label: 'D4pds_v5 (4 vCPU, 16 GiB)',   hr: 0.181,  cpu: 4,  memGiB: 16 },
+                    { label: 'D8pds_v5 (8 vCPU, 32 GiB)',   hr: 0.362,  cpu: 8,  memGiB: 32 },
+                    { label: 'D16pds_v5 (16 vCPU, 64 GiB)', hr: 0.724,  cpu: 16, memGiB: 64 }
+                ],
+                flinkTmHr:  0.20,          // D4ds_v5 (provisional pick)
                 flinkTmNvmeGB: 150,        // local SSD
                 ebsGB:      0.075,         // Premium SSD v2
                 blockGB:    0.075,
@@ -814,9 +873,7 @@
                 secretMo:   0.50,          // ~$5/mo per vault, treated as flat 10 secrets
                 kmsKeyMo:   1.00,
                 osMasterLabel: 'D2pls_v5',
-                osDataLabel: 'D4pds_v5',
-                appNodeLabel: 'D4pds_v5',
-                flinkTmLabel: 'D4ds_v5 (150 GB local SSD)',
+                flinkTmLabel: 'D4ds_v5 (150 GB local SSD, provisional)',
                 blockLabel: 'Premium SSD v2',
                 objectLabel: 'Blob Hot',
                 lbLabel: 'Standard Load Balancer',
@@ -833,27 +890,12 @@
         // Working copy (editable via prices modal)
         let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
 
-        // ===== Scale Profiles =====
-        const SCALE_CONFIGS = {
-            large: {
-                aws: { osDataHr: 0.1632, appNodeHr: 0.1632, osDataLabel: 'm7g.xlarge', appNodeLabel: 'm7g.xlarge' },
-                azure: { osDataHr: 0.181, appNodeHr: 0.181, osDataLabel: 'D4pds_v5', appNodeLabel: 'D4pds_v5' },
-                overhead: 1.3,
-                minTms: 2,
-                numLbs: 2
-            },
-            standard: {
-                aws: { osDataHr: 0.0816, appNodeHr: 0.0816, osDataLabel: 'm7g.large', appNodeLabel: 'm7g.large' },
-                azure: { osDataHr: 0.0904, appNodeHr: 0.0904, osDataLabel: 'D2pds_v5', appNodeLabel: 'D2pds_v5' },
-                overhead: 1.15,
-                minTms: 1,
-                numLbs: 1
-            }
-        };
-
         // ===== State =====
         let selectedCloud = 'aws';
-        let selectedScale = 'standard';
+        let selectedReplicas = 0;   // 0 = no replica (default), 1 = replica for uptime
+        let tenants = [
+            { name: 'Tenant 1', files: '100M', retentionMonths: 12 }
+        ];
         let lastCalc = null;
 
         // ===== Helpers =====
@@ -896,7 +938,7 @@
         const advancedConfig = document.getElementById('advanced-config');
         const resultsCard = document.getElementById('results-card');
         const cloudToggle = document.getElementById('cloud-toggle');
-        const scaleToggle = document.getElementById('scale-toggle');
+        const replicaToggle = document.getElementById('replica-toggle');
         const resultsTbody = document.getElementById('results-tbody');
         const warningContainer = document.getElementById('warning-container');
 
@@ -910,33 +952,62 @@
             if (lastCalc) runCalculations();
         });
 
-        function applyScaleConfig() {
-            const config = SCALE_CONFIGS[selectedScale];
-            
-            // Update prices working copy
-            prices.aws.osDataHr = config.aws.osDataHr;
-            prices.aws.appNodeHr = config.aws.appNodeHr;
-            prices.aws.osDataLabel = config.aws.osDataLabel;
-            prices.aws.appNodeLabel = config.aws.appNodeLabel;
-
-            prices.azure.osDataHr = config.azure.osDataHr;
-            prices.azure.appNodeHr = config.azure.appNodeHr;
-            prices.azure.osDataLabel = config.azure.osDataLabel;
-            prices.azure.appNodeLabel = config.azure.appNodeLabel;
-
-            // Update UI inputs
-            document.getElementById('overhead-multiplier').value = config.overhead;
-            document.getElementById('flink-min-tms').value = config.minTms;
-            document.getElementById('num-lbs').value = config.numLbs;
-        }
-
-        scaleToggle.addEventListener('click', (e) => {
+        replicaToggle.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
-            scaleToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            replicaToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            selectedScale = btn.dataset.scale;
-            applyScaleConfig();
+            selectedReplicas = parseInt(btn.dataset.replicas, 10);
+            if (lastCalc) runCalculations();
+        });
+
+        // ===== Tenants =====
+        const tenantsTbody = document.getElementById('tenants-tbody');
+
+        function renderTenants() {
+            tenantsTbody.innerHTML = tenants.map((t, i) => `
+                <tr data-idx="${i}">
+                    <td><input type="text" data-field="name" value="${t.name.replace(/"/g, '&quot;')}"></td>
+                    <td><input type="text" data-field="files" value="${String(t.files).replace(/"/g, '&quot;')}"></td>
+                    <td>
+                        <select data-field="retentionMonths">
+                            <option value="6" ${t.retentionMonths === 6 ? 'selected' : ''}>6 months</option>
+                            <option value="12" ${t.retentionMonths === 12 ? 'selected' : ''}>1 year</option>
+                        </select>
+                    </td>
+                    <td><button class="remove-tenant-btn" title="Remove tenant" ${tenants.length === 1 ? 'disabled' : ''}>&times;</button></td>
+                </tr>
+            `).join('');
+        }
+
+        tenantsTbody.addEventListener('change', (e) => {
+            const tr = e.target.closest('tr');
+            const field = e.target.dataset.field;
+            if (!tr || !field) return;
+            const t = tenants[parseInt(tr.dataset.idx, 10)];
+            if (!t) return;
+            if (field === 'retentionMonths') t.retentionMonths = parseInt(e.target.value, 10);
+            else t[field] = e.target.value;
+            if (lastCalc) runCalculations();
+        });
+
+        tenantsTbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-tenant-btn');
+            if (!btn || btn.disabled) return;
+            const tr = btn.closest('tr');
+            tenants.splice(parseInt(tr.dataset.idx, 10), 1);
+            renderTenants();
+            if (lastCalc) runCalculations();
+        });
+
+        document.getElementById('add-tenant-btn').addEventListener('click', () => {
+            const prev = tenants[tenants.length - 1];
+            tenants.push({
+                name: `Tenant ${tenants.length + 1}`,
+                files: prev.files,
+                retentionMonths: prev.retentionMonths
+            });
+            renderTenants();
             if (lastCalc) runCalculations();
         });
 
@@ -949,22 +1020,23 @@
             return {
                 cloud: selectedCloud,
                 az: 3, // Always 3-AZ topology
-                files: parseFileCount(document.getElementById('num-files').value),
-                changeRatePct: parseFloat(document.getElementById('change-rate').value) || 0,
-                retentionDays: parseFloat(document.getElementById('retention').value) || 365,
-                statePerFileKB: parseFloat(document.getElementById('state-per-file').value) || 0.5,
-                folderRatioPct: parseFloat(document.getElementById('folder-ratio').value) || 2,
-                mdRecordSizeKB: parseFloat(document.getElementById('md-record-size').value) || 0.5,
-                snapRecordSizeKB: parseFloat(document.getElementById('snap-record-size').value) || 1.0,
-                auditRate: parseFloat(document.getElementById('audit-rate').value) || 0.012,
-                auditRecordSizeBytes: parseFloat(document.getElementById('audit-record-size').value) || 100,
-                replicas: parseFloat(document.getElementById('replicas').value) || 1,
-                overhead: parseFloat(document.getElementById('overhead-multiplier').value) || 1.3,
-                flinkDutyPct: parseFloat(document.getElementById('flink-duty-cycle').value) || 33,
+                statePerFileKB: parseFloat(document.getElementById('state-per-file').value) || 0.1,
+                folderRatioPct: parseFloat(document.getElementById('folder-ratio').value) || 10,
+                mdRecordBytes: parseFloat(document.getElementById('md-record-size').value) || 327,
+                snapRecordBytes: parseFloat(document.getElementById('snap-record-size').value) || 228,
+                auditRate: parseFloat(document.getElementById('audit-rate').value) || 0.0022,
+                auditRecordSizeBytes: parseFloat(document.getElementById('audit-record-size').value) || 771,
+                monthlySamplePct: parseFloat(document.getElementById('monthly-sample').value) || 5,
+                replicas: selectedReplicas,
+                osWatermarkPct: parseFloat(document.getElementById('os-watermark').value) || 85,
+                flinkDutyPct: parseFloat(document.getElementById('flink-duty-cycle').value) || 30,
                 flinkNvmePct: parseFloat(document.getElementById('flink-nvme-usage').value) || 85,
-                flinkMinTms: parseFloat(document.getElementById('flink-min-tms').value) || 2,
-                osDataNodes: parseFloat(document.getElementById('os-data-nodes').value) || 3,
-                appNodes: parseFloat(document.getElementById('app-nodes').value) || 3,
+                appBaseCpu: parseFloat(document.getElementById('app-base-cpu').value) || 6.5,
+                appBaseMemGiB: parseFloat(document.getElementById('app-base-mem').value) || 24.7,
+                appTenantCpu: parseFloat(document.getElementById('app-tenant-cpu').value) || 3.5,
+                appTenantMemGiB: parseFloat(document.getElementById('app-tenant-mem').value) || 6.7,
+                appHeadroom: parseFloat(document.getElementById('app-headroom').value) || 1.2,
+                appMinNodes: parseFloat(document.getElementById('app-min-nodes').value) || 2,
                 gitPvcGB: parseFloat(document.getElementById('git-pvc').value) || 300,
                 numLbs: parseFloat(document.getElementById('num-lbs').value) || 2,
                 egressGB: parseFloat(document.getElementById('egress-gb').value) || 50,
@@ -975,44 +1047,110 @@
         }
 
         function calculateSizing(I, P) {
-            const folders = I.files * (I.folderRatioPct / 100);
-            const changedFiles = I.files * (I.changeRatePct / 100);
-
-            // Ingestor metadata state
-            const stateGB = (I.files * I.statePerFileKB) / MB;
             const usableNvmePerNode = P.flinkTmNvmeGB * (I.flinkNvmePct / 100);
-            const ingestorNodes = Math.max(I.flinkMinTms, Math.ceil(stateGB / usableNvmePerNode));
+            const FULL_SNAPSHOTS = 11;                          // 7 daily + 4 weekly
+
+            // ---- Per-tenant sizing, then aggregate across the cluster ----
+            const tenantSizings = tenants.map(t => {
+                const files = parseFileCount(t.files);
+                const folders = files * (I.folderRatioPct / 100);
+                const retentionDays = t.retentionMonths * DAYS_PER_MONTH;
+                const monthlySnapshots = t.retentionMonths - 1; // months 2..retention
+
+                const fsMdGB = (files * I.mdRecordBytes) / GB;
+                const auditRollupPerDay = files * I.auditRate;
+                const auditGB = (auditRollupPerDay * I.auditRecordSizeBytes * retentionDays) / GB;
+                const snapFullGB = (folders * FULL_SNAPSHOTS * I.snapRecordBytes) / GB;
+                const snapReducedGB = (folders * (I.monthlySamplePct / 100) * monthlySnapshots * I.snapRecordBytes) / GB;
+                const snapTotalGB = snapFullGB + snapReducedGB;
+                const snapDailyGB = (folders * I.snapRecordBytes) / GB;   // daily-tier write volume
+                const rawDataGB = fsMdGB + auditGB + snapTotalGB;
+                const stateGB = (files * I.statePerFileKB) / MB;          // Flink state, per tenant
+
+                return {
+                    name: t.name, files, retentionMonths: t.retentionMonths,
+                    folders, fsMdGB, auditRollupPerDay, auditGB,
+                    snapFullGB, snapReducedGB, snapTotalGB, snapDailyGB,
+                    rawDataGB, stateGB
+                };
+            });
+
+            const numTenants = tenantSizings.length;
+            const totalFiles = tenantSizings.reduce((s, t) => s + t.files, 0);
+            const stateGB = tenantSizings.reduce((s, t) => s + t.stateGB, 0);
+            const fsMdGB = tenantSizings.reduce((s, t) => s + t.fsMdGB, 0);
+            const auditGB = tenantSizings.reduce((s, t) => s + t.auditGB, 0);
+            const auditRollupPerDay = tenantSizings.reduce((s, t) => s + t.auditRollupPerDay, 0);
+            const snapFullGB = tenantSizings.reduce((s, t) => s + t.snapFullGB, 0);
+            const snapReducedGB = tenantSizings.reduce((s, t) => s + t.snapReducedGB, 0);
+            const snapDailyGB = tenantSizings.reduce((s, t) => s + t.snapDailyGB, 0);
+            const rawDataGB = tenantSizings.reduce((s, t) => s + t.rawDataGB, 0);
+            const folders = tenantSizings.reduce((s, t) => s + t.folders, 0);
+
+            // Ingestor: 1 TM per tenant, duty-cycled; billed as tenant-hours
+            const ingestorNodes = 1;
             const ingestorDutyHrsPerDay = 24 * (I.flinkDutyPct / 100);
-            const ingestorHrsPerMonth = ingestorNodes * ingestorDutyHrsPerDay * DAYS_PER_MONTH;
+            const ingestorHrsPerMonth = numTenants * ingestorDutyHrsPerDay * DAYS_PER_MONTH;
 
-            // OpenSearch storage components
-            const fsMdGB = (I.files * I.mdRecordSizeKB * 1.2) / MB;
-            const auditRollupPerDay = I.files * I.auditRate;
-            const auditGB = (auditRollupPerDay * I.auditRecordSizeBytes * I.retentionDays) / GB;
-            const snapDailyGB = (folders * I.snapRecordSizeKB) / MB;
-            const snapTotalGB = snapDailyGB * I.retentionDays;
+            const provisionedGB = rawDataGB * (1 + I.replicas);
 
-            const rawDataGB = fsMdGB + auditGB + snapTotalGB;
-            const provisionedGB = rawDataGB * (1 + I.replicas) * I.overhead;
-            const diskPerNodeGB = ceil100(provisionedGB / I.osDataNodes);
+            // Application nodes: baseline + per-tenant demand, cheapest-fit ladder
+            const appCpuDemand = (I.appBaseCpu + I.appTenantCpu * numTenants) * I.appHeadroom;
+            const appMemDemand = (I.appBaseMemGiB + I.appTenantMemGiB * numTenants) * I.appHeadroom;
+            // Instance pricing is ~linear per vCPU, so pure cheapest-fit degenerates
+            // into many tiny nodes. Treat options within 15% of the cheapest as
+            // ties and prefer the one with fewer (larger) nodes.
+            const appOptions = P.appNodeSizes.map(size => {
+                const n = Math.max(I.appMinNodes,
+                    Math.ceil(appCpuDemand / size.cpu),
+                    Math.ceil(appMemDemand / size.memGiB));
+                return { size, n, cost: n * size.hr };
+            });
+            const minAppCost = Math.min(...appOptions.map(o => o.cost));
+            const bestApp = appOptions
+                .filter(o => o.cost <= minAppCost * 1.15)
+                .reduce((a, b) => (b.n < a.n ? b : a));
+            const appNodeInstance = bestApp.size;
+            const appNodes = bestApp.n;
 
-            // Cross-AZ replication
-            const dailyWritesGB = (changedFiles * I.mdRecordSizeKB) / MB
-                + (auditRollupPerDay * I.auditRecordSizeBytes) / GB
+            // Data node size + count from local NVMe capacity (watermark).
+            // Pick the smallest instance in the ladder that holds the data in the
+            // minimum node count (1, or 2 when a replica needs a second node);
+            // otherwise fall back to the largest size and scale out.
+            const minOsNodes = 1 + I.replicas;
+            let osDataInstance = P.osDataSizes[P.osDataSizes.length - 1];
+            let osDataNodes = Math.max(minOsNodes,
+                Math.ceil(provisionedGB / (osDataInstance.nvmeGB * (I.osWatermarkPct / 100))));
+            for (const size of P.osDataSizes) {
+                const n = Math.ceil(provisionedGB / (size.nvmeGB * (I.osWatermarkPct / 100)));
+                if (n <= minOsNodes) {
+                    osDataInstance = size;
+                    osDataNodes = minOsNodes;
+                    break;
+                }
+            }
+            const usableOsNvmePerNode = osDataInstance.nvmeGB * (I.osWatermarkPct / 100);
+
+            // Cross-AZ replication (only when a replica is enabled)
+            const dailyWritesGB = (auditRollupPerDay * I.auditRecordSizeBytes) / GB
                 + snapDailyGB;
             const monthlyReplicaGB = (I.az === 3) ? dailyWritesGB * I.replicas * DAYS_PER_MONTH : 0;
 
-            // S3 / Blob (input bucket 90d + Ingestor checkpoints)
-            const s3InputGB = (changedFiles * 1) * 90 / MB                       // raw md events ~1KB
-                + (auditRollupPerDay * I.auditRecordSizeBytes * 90) / GB         // raw audit input
-                + stateGB * 1.5;                                                 // checkpoints
+            // S3 / Blob: input bucket (90d) + Ingestor checkpoints + OS remote store
+            const remoteStoreGB = rawDataGB;                                     // primary segment copy in S3
+            const s3InputGB = (auditRollupPerDay * I.auditRecordSizeBytes * 90) / GB  // raw audit input
+                + stateGB * 1.5                                                  // checkpoints
+                + remoteStoreGB;
 
             return {
-                folders, changedFiles, stateGB, usableNvmePerNode,
+                tenantSizings, numTenants, totalFiles,
+                folders, stateGB, usableNvmePerNode,
                 ingestorNodes, ingestorDutyHrsPerDay, ingestorHrsPerMonth,
-                fsMdGB, auditRollupPerDay, auditGB, snapDailyGB, snapTotalGB,
-                rawDataGB, provisionedGB, diskPerNodeGB,
-                monthlyReplicaGB, s3InputGB
+                fsMdGB, auditRollupPerDay, auditGB, snapDailyGB,
+                snapFullGB, snapReducedGB,
+                rawDataGB, provisionedGB, usableOsNvmePerNode, osDataInstance, osDataNodes,
+                appCpuDemand, appMemDemand, appNodeInstance, appNodes,
+                monthlyReplicaGB, remoteStoreGB, s3InputGB
             };
         }
 
@@ -1020,17 +1158,17 @@
             // ----- Compute -----
             const k8s = P.k8sControlPlaneHr * HOURS_PER_MONTH;
             const osMaster = 3 * P.osMasterHr * HOURS_PER_MONTH;
-            const osData = I.osDataNodes * P.osDataHr * HOURS_PER_MONTH;
-            const appNode = I.appNodes * P.appNodeHr * HOURS_PER_MONTH;
+            const osData = S.osDataNodes * S.osDataInstance.hr * HOURS_PER_MONTH;
+            const appNode = S.appNodes * S.appNodeInstance.hr * HOURS_PER_MONTH;
             const ingestor = S.ingestorHrsPerMonth * P.flinkTmHr;
             const compute = k8s + osMaster + osData + appNode + ingestor;
 
             // ----- Storage -----
-            const osDataDisk = I.osDataNodes * S.diskPerNodeGB * P.ebsGB;
+            // OS data lives on instance-local NVMe (included in instance price)
             const osMasterDisk = 3 * 10 * P.blockGB;          // 10 GiB per master
             const appPvc = I.gitPvcGB * P.blockGB;
             const objectStorage = S.s3InputGB * P.objectGB;
-            const storage = osDataDisk + osMasterDisk + appPvc + objectStorage;
+            const storage = osMasterDisk + appPvc + objectStorage;
 
             // ----- Network -----
             const lbs = I.numLbs * P.lbMo;
@@ -1058,7 +1196,7 @@
 
             return {
                 k8s, osMaster, osData, appNode, ingestor, compute,
-                osDataDisk, osMasterDisk, appPvc, objectStorage, storage,
+                osMasterDisk, appPvc, objectStorage, storage,
                 lbs, natBase, natData, egress, crossAz, dns, network,
                 secrets, kms, logs, managed,
                 total, total1y, total3y
@@ -1076,17 +1214,27 @@
             // Warnings
             warningContainer.innerHTML = '';
             const warnings = [];
-            if (S.diskPerNodeGB > 16384) {
-                warnings.push(`<strong>EBS exceeds single-volume max:</strong> Per-node storage of ${fmtGB(S.diskPerNodeGB)} exceeds the 16 TiB limit for a single ${P.blockLabel} volume. Increase the OpenSearch data node count.`);
-            } else if (S.diskPerNodeGB > 8192) {
-                warnings.push(`<strong>Large per-node storage:</strong> Per-node EBS of ${fmtGB(S.diskPerNodeGB)} is large. Consider increasing data node count to spread load and shorten recovery times.`);
+            if (I.replicas === 0) {
+                warnings.push(`<strong>No replica configured:</strong> Data is durable in the S3 remote store, but if a data node crashes or restarts, its shards are unavailable (queries + ingestion) until recovery from S3 completes. Enable the replica option for uptime-sensitive deployments.`);
             }
+            S.tenantSizings.forEach(t => {
+                if (t.stateGB > S.usableNvmePerNode) {
+                    warnings.push(`<strong>Ingestor state exceeds single TM capacity for ${t.name}:</strong> Estimated state of ${fmtGB(t.stateGB)} exceeds the usable NVMe (${fmtGB(S.usableNvmePerNode)}) of one ${P.flinkTmLabel} node.`);
+                }
+            });
             if (I.az === 1) {
                 warnings.push(`<strong>1-AZ deployment:</strong> No cross-AZ replication cost is included, but the cluster has no zone-level redundancy. Use 3-AZ for production HA.`);
             }
             if (warnings.length) {
                 warningContainer.innerHTML = warnings.map(w => `<div class="warning-banner">${w}</div>`).join('');
             }
+
+            // Tenant summary line
+            document.getElementById('tenant-summary-note').innerHTML =
+                `<strong>${S.numTenants}</strong> tenant${S.numTenants > 1 ? 's' : ''}, ` +
+                `<strong>${fmtN(S.totalFiles, 0)}</strong> files total, ` +
+                `index storage ${fmtGB(S.provisionedGB)}, ` +
+                `${S.osDataNodes} × OS data + ${S.appNodes} × app nodes.`;
 
             // Render summary tiles
             document.getElementById('total-monthly').textContent = fmt$(C.total);
@@ -1122,15 +1270,14 @@
             // ---- Compute ----
             rows.push({ cat: 'Compute', service: P.k8sLabel,                 qty: 1,                                   unit: 'mo',     unitPrice: P.k8sControlPlaneHr * HOURS_PER_MONTH,                  monthly: C.k8s,         note: '' });
             rows.push({ cat: 'Compute', service: `OS master (${P.osMasterLabel})`, qty: 3,                              unit: 'hr×730', unitPrice: P.osMasterHr,                                            monthly: C.osMaster,    note: '' });
-            rows.push({ cat: 'Compute', service: `OS data (${P.osDataLabel})`,    qty: I.osDataNodes,                   unit: 'hr×730', unitPrice: P.osDataHr,                                              monthly: C.osData,      note: '' });
-            rows.push({ cat: 'Compute', service: `App nodes (${P.appNodeLabel})`, qty: I.appNodes,                      unit: 'hr×730', unitPrice: P.appNodeHr,                                             monthly: C.appNode,     note: 'Hosts insight-ui, Atlantis, Backoffice, ArgoCD, agent-service, Git, Artifact, Ingestor JMs (md + audit)' });
-            rows.push({ cat: 'Compute', service: `Data Ingestor nodes (${P.flinkTmLabel})`, qty: S.ingestorNodes,       unit: `hr (~${Math.round(S.ingestorDutyHrsPerDay)} h/day × 30.44)`, unitPrice: P.flinkTmHr, monthly: C.ingestor, note: `${I.flinkDutyPct}% duty cycle, hourly runs ~20 min` });
+            rows.push({ cat: 'Compute', service: `OS data (${S.osDataInstance.label})`, qty: S.osDataNodes,             unit: 'hr×730', unitPrice: S.osDataInstance.hr,                                     monthly: C.osData,      note: 'Size + count derived from storage: local NVMe at ' + I.osWatermarkPct + '% watermark, remote-backed by S3' });
+            rows.push({ cat: 'Compute', service: `App nodes (${S.appNodeInstance.label})`, qty: S.appNodes,             unit: 'hr×730', unitPrice: S.appNodeInstance.hr,                                    monthly: C.appNode,     note: `Cheapest fit for ${S.appCpuDemand.toFixed(1)} CPU / ${S.appMemDemand.toFixed(1)} GiB (baseline + ${S.numTenants} tenant${S.numTenants > 1 ? 's' : ''} + headroom). Hosts platform services, ArgoCD, Atlantis, Backoffice, Keycloak+PG, Gitea, per-tenant UI/agents/Flink JMs + fs-ca` });
+            rows.push({ cat: 'Compute', service: `Data Ingestor (${P.flinkTmLabel})`, qty: `${S.numTenants} TM×${Math.round(S.ingestorDutyHrsPerDay)} h/day`, unit: 'hr', unitPrice: P.flinkTmHr, monthly: C.ingestor, note: `1 TM per tenant, ${I.flinkDutyPct}% duty cycle each` });
 
             // ---- Storage ----
-            rows.push({ cat: 'Storage', service: `OS data ${P.blockLabel}`,        qty: `${I.osDataNodes} × ${S.diskPerNodeGB} GiB`, unit: 'GB-mo', unitPrice: P.ebsGB,    monthly: C.osDataDisk,    note: 'Sized from retention + replicas + overhead' });
             rows.push({ cat: 'Storage', service: `OS master ${P.blockLabel}`,      qty: '3 × 10 GiB',                                  unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.osMasterDisk,  note: '' });
             rows.push({ cat: 'Storage', service: `App-node PVC (Git + Artifact)`,  qty: `${I.gitPvcGB} GiB`,                           unit: 'GB-mo', unitPrice: P.blockGB,  monthly: C.appPvc,        note: 'Self-hosted Git server + artifact registry' });
-            rows.push({ cat: 'Storage', service: `${P.objectLabel} (input + checkpoints)`, qty: `${fmtGB(S.s3InputGB)}`,                unit: 'GB-mo', unitPrice: P.objectGB, monthly: C.objectStorage, note: 'Input bucket (90 d lifecycle) + Ingestor checkpoints' });
+            rows.push({ cat: 'Storage', service: `${P.objectLabel} (input + checkpoints + remote store)`, qty: `${fmtGB(S.s3InputGB)}`, unit: 'GB-mo', unitPrice: P.objectGB, monthly: C.objectStorage, note: `Input bucket (90 d lifecycle) + Ingestor checkpoints + OpenSearch remote store (${fmtGB(S.remoteStoreGB)})` });
 
             // ---- Network ----
             rows.push({ cat: 'Network', service: P.lbLabel,                                qty: I.numLbs,                       unit: 'mo',  unitPrice: P.lbMo,        monthly: C.lbs,      note: '' });
@@ -1164,18 +1311,20 @@
             const { I, P, S } = lastCalc;
             const formulaMap = {
                 compute: [
-                    `Ingestor state = ${fmtN(I.files, 0)} files × ${I.statePerFileKB} KB = ${fmtGB(S.stateGB)}`,
-                    `Ingestor nodes = max(${I.flinkMinTms}, ceil(${fmtGB(S.stateGB)} / ${(P.flinkTmNvmeGB * I.flinkNvmePct / 100).toFixed(1)} GB usable)) = ${S.ingestorNodes}`,
-                    `Ingestor monthly hours = ${S.ingestorNodes} nodes × ${(S.ingestorDutyHrsPerDay).toFixed(1)} h/day × 30.44 = ${fmtN(S.ingestorHrsPerMonth, 0)} h`,
-                    `Audit ingestion runs as 1 always-on process on application nodes (folded into App nodes line)`
+                    `Ingestor = 1 TM per tenant (${P.flinkTmLabel}); ${S.numTenants} × ${(S.ingestorDutyHrsPerDay).toFixed(1)} h/day × 30.44 = ${fmtN(S.ingestorHrsPerMonth, 0)} h/mo (${I.flinkDutyPct}% duty each)`,
+                    `OS data nodes = ceil(${fmtGB(S.provisionedGB)} / ${fmtGB(S.usableOsNvmePerNode)} usable NVMe) = ${S.osDataNodes} × ${S.osDataInstance.label}`,
+                    `App demand = (${I.appBaseCpu} + ${I.appTenantCpu} × ${S.numTenants}) CPU, (${I.appBaseMemGiB} + ${I.appTenantMemGiB} × ${S.numTenants}) GiB, × ${I.appHeadroom} headroom = ${S.appCpuDemand.toFixed(1)} CPU / ${S.appMemDemand.toFixed(1)} GiB`,
+                    `App nodes = cheapest fit = ${S.appNodes} × ${S.appNodeInstance.label} (min ${I.appMinNodes} nodes)`,
+                    `Audit (fs-ca) ingestion runs always-on on application nodes (in per-tenant demand)`
                 ],
                 storage: [
-                    `fs_md = ${fmtN(I.files, 0)} × ${I.mdRecordSizeKB} KB × 1.2 = ${fmtGB(S.fsMdGB)}`,
-                    `Audit rollup = ${fmtN(S.auditRollupPerDay, 0)} rows/day × ${I.auditRecordSizeBytes} B × ${I.retentionDays} d = ${fmtGB(S.auditGB)}`,
-                    `Snapshots = ${fmtN(S.folders, 0)} folders × ${I.snapRecordSizeKB} KB/day × ${I.retentionDays} d = ${fmtGB(S.snapTotalGB)}`,
-                    `Raw total = ${fmtGB(S.rawDataGB)} → provisioned (×${(1 + I.replicas)} replicas × ${I.overhead} overhead) = ${fmtGB(S.provisionedGB)}`,
-                    `Per data-node disk = ${fmtGB(S.provisionedGB)} / ${I.osDataNodes} nodes = ${fmtGB(S.diskPerNodeGB)} (rounded up to nearest 100 GiB)`,
-                    `Object storage ≈ ${fmtGB(S.s3InputGB)} (input bucket 90 d + Ingestor checkpoints)`
+                    `fs_md = ${fmtN(S.totalFiles, 0)} files (all tenants) × ${I.mdRecordBytes} B = ${fmtGB(S.fsMdGB)}`,
+                    `Activity = ${fmtN(S.auditRollupPerDay, 0)} events/day × ${I.auditRecordSizeBytes} B × per-tenant retention = ${fmtGB(S.auditGB)}`,
+                    `Folder history (all folders, daily 7 + weekly 4) = ${fmtN(S.folders, 0)} × 11 × ${I.snapRecordBytes} B = ${fmtGB(S.snapFullGB)}`,
+                    `Folder history (monthly × (retention months − 1), ${I.monthlySamplePct}% of folders) = ${fmtGB(S.snapReducedGB)}`,
+                    `Raw primary = ${fmtGB(S.rawDataGB)} → with ${I.replicas} replica(s) = ${fmtGB(S.provisionedGB)}`,
+                    `Data nodes = ${S.osDataNodes} × ${S.osDataInstance.label} — smallest size fitting ${fmtGB(S.provisionedGB)} at ${I.osWatermarkPct}% watermark (local NVMe, no EBS)`,
+                    `Object storage ≈ ${fmtGB(S.s3InputGB)} (input 90 d + checkpoints + remote store ${fmtGB(S.remoteStoreGB)})`
                 ],
                 network: I.az === 3 ? [
                     `Daily writes ≈ md changes + audit rollup + snapshots`,
@@ -1224,12 +1373,9 @@
             const fields = [
                 { key: 'k8sControlPlaneHr', label: P.k8sLabel, unit: '$/hr' },
                 { key: 'osMasterHr',  label: `${P.osMasterLabel} (OS master)`,        unit: '$/hr' },
-                { key: 'osDataHr',    label: `${P.osDataLabel} (OS data)`,            unit: '$/hr' },
-                { key: 'appNodeHr',   label: `${P.appNodeLabel} (app nodes)`,         unit: '$/hr' },
                 { key: 'flinkTmHr',   label: `${P.flinkTmLabel} (Ingestor node)`,     unit: '$/hr' },
                 { key: 'flinkTmNvmeGB', label: `Ingestor local NVMe / SSD`,           unit: 'GB' },
-                { key: 'ebsGB',       label: `${P.blockLabel} (OS data disk)`,        unit: '$/GB-mo' },
-                { key: 'blockGB',     label: 'Other block storage (master, PVC)',     unit: '$/GB-mo' },
+                { key: 'blockGB',     label: 'Block storage (master disks, PVC)',     unit: '$/GB-mo' },
                 { key: 'objectGB',    label: `${P.objectLabel}`,                       unit: '$/GB-mo' },
                 { key: 'lbMo',        label: `${P.lbLabel} (per LB)`,                  unit: '$/mo' },
                 { key: 'natHr',       label: 'NAT Gateway (hourly base)',              unit: '$/hr' },
@@ -1279,7 +1425,7 @@
         // ===== CSV BoM export =====
         function exportBom() {
             if (!lastCalc) { alert('Calculate first.'); return; }
-            const { I, P, C } = lastCalc;
+            const { I, P, S, C } = lastCalc;
             const rows = buildBomRows();
             const cloudLabel = I.cloud === 'aws' ? 'AWS us-east-1' : 'Azure East US';
             const azLabel = I.az === 3 ? '3-AZ' : '1-AZ';
@@ -1288,9 +1434,11 @@
             lines.push(`# CTERA Insight BYOC - Bill of Materials`);
             lines.push(`# Cloud,${cloudLabel}`);
             lines.push(`# Topology,${azLabel}`);
-            lines.push(`# Files,${I.files}`);
-            lines.push(`# Daily change rate,${I.changeRatePct}%`);
-            lines.push(`# Retention,${I.retentionDays} days`);
+            lines.push(`# Tenants,${S.numTenants}`);
+            S.tenantSizings.forEach(t => {
+                lines.push(`# Tenant,"${t.name}",${t.files} files,${t.retentionMonths} months retention`);
+            });
+            lines.push(`# Total files,${S.totalFiles}`);
             lines.push(`# Pricing basis,Monthly uses On-Demand list prices. 1-Year and 3-Year totals include RI/Savings Plan discounts for compute.`);
             lines.push(`# Generated,${new Date().toISOString()}`);
             lines.push('');
@@ -1403,6 +1551,55 @@
             p2Lines.forEach(line => { checkPage(5); doc.text(line, left, y); y += 4.5; });
             y += 3;
 
+            // ===== TENANT SUMMARY =====
+            checkPage(14 + S.tenantSizings.length * 6);
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(54, 52, 53);
+            doc.text('Tenant Summary', left, y);
+            y += 6;
+
+            const tCols = ['Tenant', 'Files', 'Retention', 'Est. index storage'];
+            const tColW = [55, 40, 35, 52];
+            const tTotalW = tColW.reduce((a, b) => a + b, 0);
+
+            doc.setFillColor(235, 237, 255);
+            doc.setDrawColor(200);
+            doc.setLineWidth(0.2);
+            doc.rect(left, y - 4, tTotalW, 6.5, 'FD');
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'bold');
+            let tx = left;
+            tCols.forEach((h, i) => { doc.text(h, tx + 2, y); tx += tColW[i]; });
+            y += 5;
+
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(0);
+            S.tenantSizings.forEach((t, i) => {
+                checkPage(8);
+                doc.setFillColor(i % 2 === 0 ? 252 : 255, i % 2 === 0 ? 252 : 255, i % 2 === 0 ? 252 : 255);
+                doc.rect(left, y - 4, tTotalW, 6, 'FD');
+                let x = left;
+                const cells = [
+                    String(t.name).slice(0, 30),
+                    fmtN(t.files, 0),
+                    t.retentionMonths === 12 ? '1 year' : t.retentionMonths + ' months',
+                    fmtGB(t.rawDataGB * (1 + I.replicas))
+                ];
+                cells.forEach((c, ci) => { doc.text(c, x + 2, y); x += tColW[ci]; });
+                y += 6;
+            });
+
+            // Totals row
+            doc.setFont(undefined, 'bold');
+            doc.setFillColor(245, 245, 245);
+            doc.rect(left, y - 4, tTotalW, 6, 'FD');
+            let tx2 = left;
+            const totCells = ['Total (' + S.numTenants + ')', fmtN(S.totalFiles, 0), '', fmtGB(S.provisionedGB)];
+            totCells.forEach((c, ci) => { doc.text(c, tx2 + 2, y); tx2 += tColW[ci]; });
+            doc.setFont(undefined, 'normal');
+            y += 8;
+
             // ===== ARCHITECTURE DIAGRAM =====
             if (archImg) {
                 const archW = pw - left * 2;
@@ -1423,7 +1620,7 @@
             doc.setFont(undefined, 'normal');
             doc.setFontSize(9);
             doc.setTextColor(0);
-            doc.text('Resource sizing is derived from three inputs specific to your environment:', left, y);
+            doc.text('Resource sizing is derived from two inputs specific to your environment:', left, y);
             y += 6;
 
             // 3-row sizing table
@@ -1432,8 +1629,7 @@
             const col2W = pw - left * 2 - col1W;
             const tblRows = [
                 ['File count',        'Metadata processing capacity and search index size'],
-                ['Daily change rate', 'Processing hours, audit log volume, cross-zone data transfer'],
-                ['Retention period',  'Historical data storage (audit rollup + folder snapshots)']
+                ['Retention period',  'Historical data storage (activity index + folder size history)']
             ];
 
             // Header row
@@ -1486,14 +1682,13 @@
             const cfg = [
                 'Cloud: ' + cloudLabel,
                 'Topology: ' + azLabel,
-                'Files: ' + fmtN(I.files, 0),
-                'Daily change rate: ' + I.changeRatePct + '%',
-                'Retention: ' + I.retentionDays + ' days',
-                'OS data nodes: ' + I.osDataNodes + ' \u00d7 ' + P.osDataLabel,
-                'App nodes: ' + I.appNodes + ' \u00d7 ' + P.appNodeLabel,
-                'Data ingestor nodes: ' + S.ingestorNodes + ' \u00d7 ' + P.flinkTmLabel + ' (' + I.flinkDutyPct + '% duty cycle)',
-                'OS data per-node disk: ' + fmtGB(S.diskPerNodeGB),
-                'Object storage (input + checkpoints): ' + fmtGB(S.s3InputGB)
+                'Tenants: ' + S.numTenants + ' (' + fmtN(S.totalFiles, 0) + ' files total)',
+                'Folder history: tiered (daily 7 + weekly 4 all folders, monthly \u00d711 at ' + I.monthlySamplePct + '% sampling)',
+                'Replicas: ' + I.replicas + (I.replicas === 0 ? ' (S3 remote store durability)' : ''),
+                'OS data nodes: ' + S.osDataNodes + ' \u00d7 ' + S.osDataInstance.label + ' (local NVMe, ' + I.osWatermarkPct + '% watermark)',
+                'App nodes: ' + S.appNodes + ' \u00d7 ' + S.appNodeInstance.label + ' (fit for ' + S.appCpuDemand.toFixed(1) + ' CPU / ' + S.appMemDemand.toFixed(1) + ' GiB)',
+                'Data ingestor: 1 TM per tenant \u00d7 ' + P.flinkTmLabel + ' (' + I.flinkDutyPct + '% duty cycle each)',
+                'Object storage (input + checkpoints + remote store): ' + fmtGB(S.s3InputGB)
             ];
             cfg.forEach(line => { checkPage(); doc.text(line, left, y); y += 4; });
             y += 2.5;
@@ -1619,8 +1814,8 @@
         document.getElementById('export-pdf-btn').addEventListener('click', exportPdf);
         calculateBtn.addEventListener('click', runCalculations);
 
-        // Initial calc on load (so page isn't blank-feeling)
-        applyScaleConfig();
+        // Initial render + calc on load (so page isn't blank-feeling)
+        renderTenants();
         runCalculations();
     });
     </script>
